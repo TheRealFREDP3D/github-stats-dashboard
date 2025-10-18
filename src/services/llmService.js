@@ -34,7 +34,16 @@ const createPrompt = (repositoryData) => {
       "suggestions": "Any improvement suggestions for this file."
     }
   ],
-  "generalSuggestions": "General improvement suggestions for the entire repository."
+  "generalSuggestions": [
+    {
+      "category": "Performance",
+      "text": "Suggestion text here"
+    },
+    {
+      "category": "Best Practices",
+      "text": "Another suggestion here"
+    }
+  ]
 }`;
 
   return prompt;
@@ -76,7 +85,7 @@ const analyzeWithOpenRouter = async (apiKey, repositoryData) => {
   try {
     return JSON.parse(content);
   } catch (e) {
-    throw new Error('Failed to parse JSON response from OpenRouter');
+    throw new Error(`Failed to parse JSON response from OpenRouter: ${e.message}`);
   }
 };
 
@@ -116,7 +125,7 @@ const analyzeWithGemini = async (apiKey, repositoryData) => {
   try {
     return JSON.parse(content);
   } catch (e) {
-    throw new Error('Failed to parse JSON response from Gemini');
+    throw new Error(`Failed to parse JSON response from Gemini: ${e.message}`);
   }
 };
 
@@ -156,7 +165,7 @@ const analyzeWithOpenAI = async (apiKey, repositoryData) => {
   try {
     return JSON.parse(content);
   } catch (e) {
-    throw new Error('Failed to parse JSON response from OpenAI');
+    throw new Error(`Failed to parse JSON response from OpenAI: ${e.message}`);
   }
 };
 
