@@ -4,7 +4,9 @@ An interactive dashboard for visualizing GitHub repository statistics including 
 
 ## Features
 
-### 📊 Repository Overview Cards
+### Repository Overview Cards
+
+![Overview Cards](assets/main_page.png)
 
 - **Grid Layout**: Clean, responsive card-based layout displaying all your repositories
 - **Key Metrics**: Each card shows:
@@ -18,7 +20,10 @@ An interactive dashboard for visualizing GitHub repository statistics including 
 - **Repository Icons**: Uses GitHub's social preview images (OpenGraph images) as repository icons
 - **Hover Effects**: Smooth animations and visual feedback on card hover
 
-### 🎯 Detailed Repository View
+### Detailed Repository View
+
+![Detailled View](assets/detailed_view.png)
+
 
 - **Smooth Animations**: Cards expand with fluid animations into full-screen detail views
 - **Comprehensive Statistics**:
@@ -29,13 +34,13 @@ An interactive dashboard for visualizing GitHub repository statistics including 
 - **Visual Data**: Area charts powered by Recharts showing views and clones over time
 - **Easy Navigation**: Click anywhere outside or use the close button to return to the grid
 
-### 🔐 Secure Authentication
+### Secure Authentication
 
 - **Personal Access Token**: Uses GitHub PAT for secure API access
 - **Local Storage**: Token is stored only in your browser, never sent to any server except GitHub
 - **Privacy First**: All API calls go directly from your browser to GitHub
 
-### 🤖 AI-Powered Code Analysis
+### AI-Powered Code Analysis
 
 - **Multi-Provider Support**: Support for multiple LLM providers (OpenRouter, Gemini, OpenAI)
 - **Repository Architecture Understanding**: Analyzes overall project structure and design patterns
@@ -71,10 +76,15 @@ The AI analysis feature consists of several key components:
 
 ## Getting Started
 
+![Landing Page](assets/landing_page.png)  
+
+
 ### Prerequisites
 
 - A GitHub account
 - A GitHub Personal Access Token with appropriate permissions
+
+
 
 ### Creating a GitHub Personal Access Token
 
