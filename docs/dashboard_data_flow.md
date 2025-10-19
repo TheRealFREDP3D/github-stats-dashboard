@@ -16,13 +16,14 @@ Traces the flow from token submission through GitHub API data fetching to dashbo
 
 ### Flow Diagram
 
-```
+```text
 Token Submission → Hook Activation → Repository Fetch → Data Population → Dashboard Render
 ```
 
 ### Step-by-Step Process
 
 #### 1a. Token Submission
+
 **Location:** `App.jsx`
 
 ```javascript
@@ -36,6 +37,7 @@ if (token.trim()) {
 - Triggers downstream data fetching
 
 #### 1b. Hook Activation
+
 **Location:** `App.jsx`
 
 ```javascript
@@ -47,6 +49,7 @@ const { repositories, loading, error } = useGitHubAPI(submittedToken);
 - When token changes, `fetchRepositories()` is called
 
 #### 1c. Repository Fetch
+
 **Location:** `useGitHubAPI.js`
 
 ```javascript
@@ -62,6 +65,7 @@ const repos = await fetchWithAuth(
 - Maps enhanced data structure with statistics
 
 #### 1d. Data Population
+
 **Location:** `useGitHubAPI.js`
 
 ```javascript
@@ -73,6 +77,7 @@ setRepositories(reposWithStats);
 - Triggers re-render of dashboard components
 
 #### 1e. Dashboard Render
+
 **Location:** `App.jsx`
 
 ```javascript
@@ -93,15 +98,16 @@ setRepositories(reposWithStats);
 
 Traces the flow from card click interaction through state management to detailed view rendering.
 
-### Flow Diagram
+### Flow Diagram 1
 
-```
+```text
 Card Click → State Update → Conditional Render → Data Processing → Detail Display
 ```
 
-### Step-by-Step Process
+### Step-by-Step Process 2
 
 #### 2a. Card Click Handler
+
 **Location:** `Dashboard.jsx`
 
 ```javascript
@@ -113,6 +119,7 @@ onClick={() => setSelectedRepo(repo)}
 - Selected repository data is stored
 
 #### 2b. State Management
+
 **Location:** `Dashboard.jsx`
 
 ```javascript
@@ -124,6 +131,7 @@ const [selectedRepo, setSelectedRepo] = useState(null);
 - Contains full repository object when selected
 
 #### 2c. Conditional Rendering
+
 **Location:** `Dashboard.jsx`
 
 ```javascript
@@ -145,6 +153,7 @@ const [selectedRepo, setSelectedRepo] = useState(null);
 - Close handler resets state to return to grid view
 
 #### 2d. Data Processing
+
 **Location:** `RepoDetail.jsx`
 
 ```javascript
@@ -158,6 +167,7 @@ const trafficData = repo.viewsData.map((view, index) => {
 - Statistics calculated and displayed
 
 #### 2e. Close Interaction
+
 **Location:** `RepoDetail.jsx`
 
 ```javascript
@@ -175,15 +185,16 @@ onClick={onClose}
 
 Traces the flow from analysis trigger through GitHub content fetching to LLM processing and results display.
 
-### Flow Diagram
+### Flow Diagram 3
 
-```
+```text
 Analysis Trigger → Content Fetch → Tree Retrieval → LLM Analysis → Provider Processing → Results Display
 ```
 
-### Step-by-Step Process
+### Step-by-Step Process 3
 
 #### 3a. Analysis Trigger
+
 **Location:** `RepoDetail.jsx`
 
 ```javascript
@@ -197,6 +208,7 @@ Analysis Trigger → Content Fetch → Tree Retrieval → LLM Analysis → Provi
 - Button is disabled during loading state
 
 #### 3b. Content Fetching
+
 **Location:** `useRepoAnalysis.js`
 
 ```javascript
@@ -213,6 +225,7 @@ const repoData = await fetchMultipleFiles(
 - Prepares data structure for LLM analysis
 
 #### 3c. Tree Retrieval
+
 **Location:** `githubContentService.js`
 
 ```javascript
@@ -224,6 +237,7 @@ const tree = await fetchRepositoryTree(owner, repo, branch, token);
 - Filters and processes relevant files for analysis
 
 #### 3d. LLM Analysis
+
 **Location:** `useRepoAnalysis.js`
 
 ```javascript
@@ -239,6 +253,7 @@ const result = await analyzeRepo(
 - Handles provider-specific formatting
 
 #### 3e. Provider Processing
+
 **Location:** `llmService.js`
 
 ```javascript
@@ -251,6 +266,7 @@ return await analyzeWithOpenRouter(apiKey, repositoryData);
 - Handles errors and rate limits
 
 #### 3f. Results Display
+
 **Location:** `RepoDetail.jsx`
 
 ```javascript
@@ -266,7 +282,7 @@ return await analyzeWithOpenRouter(apiKey, repositoryData);
 
 ## Component Hierarchy
 
-```
+```text
 App
 ├── TokenInput (if no token)
 └── Dashboard (if token submitted)
@@ -282,6 +298,7 @@ App
 ## Key Services and Utilities
 
 ### GitHub API Service
+
 - **File:** `useGitHubAPI.js`, `githubContentService.js`
 - **Purpose:** Authenticate and fetch repository data
 - **Key Functions:**
@@ -290,6 +307,7 @@ App
   - `fetchMultipleFiles()` - Batch file content retrieval
 
 ### LLM Service
+
 - **File:** `llmService.js`, `useRepoAnalysis.js`
 - **Purpose:** Process code analysis requests
 - **Key Functions:**
@@ -298,6 +316,7 @@ App
   - Provider-specific formatters and handlers
 
 ### State Management
+
 - **Strategy:** React Hooks (`useState`, `useEffect`, custom hooks)
 - **Key States:**
   - `submittedToken` - GitHub authentication
@@ -310,6 +329,7 @@ App
 ## Data Structures
 
 ### Repository Object
+
 ```javascript
 {
   id: number,
@@ -329,6 +349,7 @@ App
 ```
 
 ### Analysis Result
+
 ```javascript
 {
   summary: string,
@@ -349,12 +370,14 @@ App
 ## Security Considerations
 
 ### Token Management
+
 - GitHub tokens stored in component state only
 - Use `.env` files for development (via dotenv)
 - Tokens never logged or exposed in UI
 - All API requests use HTTPS
 
 ### API Key Security
+
 - LLM API keys managed through secure input
 - Keys stored in memory only during session
 - No persistence to localStorage or cookies
@@ -365,11 +388,13 @@ App
 ## Error Handling Strategy
 
 ### GitHub API Errors
+
 - Network failures: Display user-friendly error message
 - Authentication errors: Prompt for token re-entry
 - Rate limiting: Show retry timer and suggestions
 
 ### LLM Analysis Errors
+
 - API failures: Graceful degradation with error display
 - Timeout handling: Allow retry with different providers
 - Invalid responses: Validation and fallback messaging
@@ -379,11 +404,13 @@ App
 ## Performance Optimizations
 
 ### Data Fetching
+
 - Parallel API requests using `Promise.all()`
 - Pagination for large repository lists
 - Caching of repository metadata
 
 ### Rendering
+
 - Conditional rendering to minimize DOM updates
 - AnimatePresence for smooth transitions
 - Lazy loading of analysis components
@@ -393,6 +420,7 @@ App
 ## Project Overview
 
 ### Tech Stack
+
 - **Frontend:** React with hooks
 - **Styling:** Tailwind CSS
 - **Animations:** Framer Motion
@@ -400,18 +428,22 @@ App
 - **APIs:** GitHub API, Multiple LLM providers
 
 ### Key Features
+
 1. GitHub repository dashboard with statistics
 2. Real-time traffic and engagement metrics
 3. AI-powered code analysis with multiple LLM providers
 4. Animated UI transitions and interactions
 
 ### Development Setup
+
 1. Clone repository
 2. Create `.env` file with required API keys:
-   ```
+
+   ```sh
    GITHUB_TOKEN=your_github_token
    OPENROUTER_API_KEY=your_openrouter_key
    ```
+
 3. Install dependencies: `npm install`
 4. Run development server: `npm run dev`
 

@@ -51,7 +51,9 @@ Error Handling & State Updates → setLoading(false) / setError()
 ### Implementation Details
 
 #### 1a. Hook Initialization
+
 **File:** `RepoDetail.jsx` (Line 18)
+
 ```javascript
 const { 
   analysis, 
@@ -70,7 +72,9 @@ const {
 **Purpose:** Initialize the repository analysis hook with repository metadata and authentication token.
 
 #### 1b. Analysis Trigger
+
 **File:** `RepoDetail.jsx` (Line 271)
+
 ```jsx
 <Button onClick={analyzeRepository} disabled={loading}>
   Analyze Repository
@@ -80,19 +84,24 @@ const {
 **Purpose:** User interaction point that triggers the entire analysis workflow.
 
 #### 1c. Content Fetching
+
 **File:** `useRepoAnalysis.js` (Line 41)
+
 ```javascript
 const repoData = await fetchMultipleFiles(owner, name, defaultBranch, token);
 ```
 
 **Purpose:** Fetches repository structure and file contents from GitHub API.
 
-**Returns:** 
+**Returns:**
+
 - `tree`: Repository file structure
 - `files`: Array of file contents with metadata
 
 #### 1d. LLM Analysis
+
 **File:** `useRepoAnalysis.js` (Line 42)
+
 ```javascript
 const result = await analyzeRepo(provider, apiKeys[provider], repoData);
 ```
@@ -100,12 +109,15 @@ const result = await analyzeRepo(provider, apiKeys[provider], repoData);
 **Purpose:** Sends repository data to configured LLM provider for analysis.
 
 **Parameters:**
+
 - `provider`: Selected LLM provider (OpenRouter/Gemini/OpenAI)
 - `apiKeys[provider]`: Provider-specific API key
 - `repoData`: Fetched repository structure and contents
 
 #### 1e. Result Caching
+
 **File:** `useRepoAnalysis.js` (Line 45)
+
 ```javascript
 localStorage.setItem(cacheKey, JSON.stringify(result));
 ```
@@ -146,7 +158,9 @@ Filter out failed requests → Return {tree, files} structure
 ### Implementation Details
 
 #### 2a. Tree Fetching
+
 **File:** `githubContentService.js` (Line 73)
+
 ```javascript
 const tree = await fetchRepositoryTree(owner, repo, branch, token);
 ```
@@ -154,7 +168,9 @@ const tree = await fetchRepositoryTree(owner, repo, branch, token);
 **Purpose:** Retrieve complete repository file tree structure.
 
 #### 2b. GitHub API Call
+
 **File:** `githubContentService.js` (Line 43)
+
 ```javascript
 const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 ```
@@ -162,9 +178,11 @@ const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recur
 **API Endpoint:** `GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1`
 
 **Parameters:**
+
 - `recursive=1`: Fetch entire tree structure in single call
 
 **Response Structure:**
+
 ```json
 {
   "tree": [
@@ -179,7 +197,9 @@ const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}?recur
 ```
 
 #### 2c. Smart Filtering
+
 **File:** `githubContentService.js` (Line 76)
+
 ```javascript
 const filtered = tree.filter(item => {
   // Filter by file type & size
@@ -189,6 +209,7 @@ const filtered = tree.filter(item => {
 ```
 
 **Filtering Criteria:**
+
 - **Type:** Only `blob` (files), exclude `tree` (directories)
 - **Size:** Files under size threshold
 - **Extensions:** Prioritize source code files
@@ -196,12 +217,15 @@ const filtered = tree.filter(item => {
 - **Limit:** Top 20 files after sorting
 
 **Source File Extensions (Prioritized):**
+
 ```javascript
 ['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'html', 'css', 'json', 'md']
 ```
 
 #### 2d. Content Fetching
+
 **File:** `githubContentService.js` (Line 102)
+
 ```javascript
 return await fetchFileContent(owner, repo, item.path, token);
 ```
@@ -209,6 +233,7 @@ return await fetchFileContent(owner, repo, item.path, token);
 **API Endpoint:** `GET /repos/{owner}/{repo}/contents/{path}`
 
 **Parallelization:** Uses `Promise.all()` for concurrent fetching
+
 ```javascript
 const files = await Promise.all(
   filtered.map(async (item) => {
@@ -218,7 +243,9 @@ const files = await Promise.all(
 ```
 
 #### 2e. Base64 Decoding
+
 **File:** `githubContentService.js` (Line 61)
+
 ```javascript
 const content = atob(data.content.replace(/\n/g, ''));
 ```
@@ -226,11 +253,13 @@ const content = atob(data.content.replace(/\n/g, ''));
 **Purpose:** Decode Base64-encoded file contents from GitHub API.
 
 **Process:**
+
 1. Remove newlines from Base64 string
 2. Decode using `atob()`
 3. Return UTF-8 text content
 
 **Return Structure:**
+
 ```javascript
 {
   tree: [],        // Repository file tree
@@ -280,6 +309,7 @@ Error handling for unsupported providers
 ### Context Integration
 
 **LLMContext Usage:**
+
 - Provides `provider` and `apiKeys` configuration
 - Hook location: `useRepoAnalysis.js` (Line 7)
 - Function: `useLLM()` hook
@@ -288,7 +318,9 @@ Error handling for unsupported providers
 ### Implementation Details
 
 #### 3a. Analysis Entry Point
+
 **File:** `llmService.js` (Line 179)
+
 ```javascript
 export const analyzeRepository = async (provider, apiKey, repositoryData) => {
   // Main entry point for LLM analysis
@@ -297,12 +329,15 @@ export const analyzeRepository = async (provider, apiKey, repositoryData) => {
 ```
 
 **Parameters:**
+
 - `provider`: String - 'openrouter', 'gemini', or 'openai'
 - `apiKey`: String - Provider-specific API key
 - `repositoryData`: Object - Repository tree and file contents
 
 #### 3b. Provider Routing
+
 **File:** `llmService.js` (Line 184)
+
 ```javascript
 switch (provider) {
   case 'openrouter':
@@ -317,6 +352,7 @@ switch (provider) {
 ```
 
 **Supported Providers:**
+
 | Provider | Handler Function | API Endpoint |
 |----------|-----------------|--------------|
 | OpenRouter | `analyzeWithOpenRouter()` | `https://openrouter.ai/api/v1/chat/completions` |
@@ -324,16 +360,19 @@ switch (provider) {
 | OpenAI | `analyzeWithOpenAI()` | `https://api.openai.com/v1/chat/completions` |
 
 #### 3c. Prompt Creation
+
 **File:** `llmService.js` (Line 59)
+
 ```javascript
 const prompt = createPrompt(repositoryData);
 ```
 
 **Prompt Structure:**
+
 1. **Repository Overview**
    - File tree structure
    - File count and types
-   
+
 2. **File Contents**
    - Each file's path
    - Complete source code
@@ -345,6 +384,7 @@ const prompt = createPrompt(repositoryData);
    - Expected structure
 
 **Example Prompt Template:**
+
 ```
 Analyze this repository:
 
@@ -364,7 +404,9 @@ Provide analysis in JSON format:
 ```
 
 #### 3d. API Request (OpenRouter Example)
+
 **File:** `llmService.js` (Line 61)
+
 ```javascript
 const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
   method: 'POST',
@@ -385,22 +427,27 @@ const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
 ```
 
 **Request Headers:**
+
 - `Content-Type`: application/json
 - `Authorization`: Bearer token with API key
 
 **Request Body:**
+
 - `model`: LLM model identifier
 - `messages`: Array of chat messages
 - `temperature`: (optional) Response creativity
 - `max_tokens`: (optional) Response length limit
 
 #### 3e. Response Parsing
+
 **File:** `llmService.js` (Line 86)
+
 ```javascript
 return JSON.parse(content);
 ```
 
 **Response Structure:**
+
 ```json
 {
   "overview": "High-level repository summary",
@@ -456,15 +503,19 @@ Error handling for missing analysis → AlertCircle icon with message
 ### Implementation Details
 
 #### 4a. Component Rendering
+
 **File:** `RepoDetail.jsx` (Line 278)
+
 ```jsx
 <RepoAnalysis analysis={analysis} />
 ```
 
 **Props:**
+
 - `analysis`: Object containing LLM analysis results
 
 **Conditional Rendering:**
+
 ```jsx
 {isAnalyzed && analysis && (
   <RepoAnalysis analysis={analysis} />
@@ -472,7 +523,9 @@ Error handling for missing analysis → AlertCircle icon with message
 ```
 
 #### 4b. Analysis Component
+
 **File:** `RepoAnalysis.jsx` (Line 8)
+
 ```javascript
 export const RepoAnalysis = ({ analysis }) => {
   // Renders tabbed interface with analysis results
@@ -481,13 +534,16 @@ export const RepoAnalysis = ({ analysis }) => {
 ```
 
 **Component Structure:**
+
 - Wrapper `Card` component
 - `Tabs` for navigation
 - Content areas with `ScrollArea`
 - Error states with `AlertCircle`
 
 #### 4c. Tabbed Interface
+
 **File:** `RepoAnalysis.jsx` (Line 23)
+
 ```jsx
 <Tabs defaultValue="overview" className="w-full">
   <TabsList>
@@ -501,12 +557,15 @@ export const RepoAnalysis = ({ analysis }) => {
 ```
 
 **Tabs:**
+
 1. **Overview** - High-level analysis summary
 2. **Files** - Per-file analysis details
 3. **Suggestions** - Improvement recommendations
 
 #### 4d. File Analysis Rendering
+
 **File:** `RepoAnalysis.jsx` (Line 64)
+
 ```jsx
 {analysis.files.map((file, index) => (
   <Accordion type="single" collapsible key={index}>
@@ -525,8 +584,9 @@ export const RepoAnalysis = ({ analysis }) => {
 ```
 
 **File Card Components:**
+
 - **Header:** File path with icon
-- **Summary Section:** 
+- **Summary Section:**
   - Label: "Summary"
   - Content: File-specific analysis
 - **Suggestions Section:**
@@ -534,6 +594,7 @@ export const RepoAnalysis = ({ analysis }) => {
   - Content: Array of improvement tips
 
 **Example Structure:**
+
 ```
 📄 src/components/Dashboard.jsx
   └─ Summary
@@ -545,7 +606,9 @@ export const RepoAnalysis = ({ analysis }) => {
 ```
 
 #### 4e. Suggestions Display
+
 **File:** `RepoAnalysis.jsx` (Line 111)
+
 ```jsx
 {analysis.generalSuggestions.map((suggestion, index) => (
   <Card key={index}>
@@ -560,6 +623,7 @@ export const RepoAnalysis = ({ analysis }) => {
 ```
 
 **Suggestion Categories:**
+
 - Performance
 - Security
 - Code Quality
@@ -569,6 +633,7 @@ export const RepoAnalysis = ({ analysis }) => {
 - Documentation
 
 **Visual Elements:**
+
 - **Badge:** Color-coded category indicator
 - **Card:** Container with hover effects
 - **Text:** Suggestion description
@@ -638,11 +703,13 @@ export const RepoAnalysis = ({ analysis }) => {
 ### Rate Limiting Considerations
 
 **GitHub API Limits:**
+
 - **Authenticated:** 5,000 requests/hour
 - **Tree API:** 1 request per repository
 - **Content API:** 1 request per file (parallelized)
 
 **Example Calculation:**
+
 ```
 Repository Analysis Cost:
 - Tree fetch: 1 request
@@ -725,11 +792,13 @@ describe('Repository Analysis Flow', () => {
 ### API Key Management
 
 ⚠️ **Client-Side Storage:**
+
 - All API keys stored in browser localStorage
 - Keys visible in DevTools
 - Vulnerable to XSS attacks
 
 **Mitigation Strategies:**
+
 - Use keys with minimal required permissions
 - Regular key rotation
 - Clear security warnings in UI
@@ -738,6 +807,7 @@ describe('Repository Analysis Flow', () => {
 ### GitHub Token Scope
 
 **Required Scopes:**
+
 - `public_repo` - Public repository access
 - `repo` - Private repository access (if needed)
 
@@ -784,6 +854,7 @@ describe('Repository Analysis Flow', () => {
 ### Debug Mode
 
 Enable verbose logging:
+
 ```javascript
 // In useRepoAnalysis.js
 console.log('Fetching repository data...', { owner, name, branch });
