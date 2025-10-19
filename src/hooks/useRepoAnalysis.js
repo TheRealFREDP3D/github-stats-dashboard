@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLLM } from '../contexts/LLMContext';
 import { fetchMultipleFiles } from '../services/githubContentService';
 import { analyzeRepository as analyzeRepo } from '../services/llmService';
@@ -11,6 +11,13 @@ export const useRepoAnalysis = (owner, name, defaultBranch, token) => {
   const [isAnalyzed, setIsAnalyzed] = useState(false);
 
   const cacheKey = `repo-analysis-${owner}-${name}-${defaultBranch}`;
+
+  const clearAnalysis = useCallback(() => {
+    setAnalysis(null);
+    setIsAnalyzed(false);
+    setError(null);
+    localStorage.removeItem(cacheKey);
+  }, [cacheKey]);
 
   useEffect(() => {
     // Load cached analysis on mount
@@ -27,10 +34,18 @@ export const useRepoAnalysis = (owner, name, defaultBranch, token) => {
   }, [cacheKey]);
 
   // Clear analysis when provider or API key changes
+  const prevDepsRef = useRef();
   useEffect(() => {
-    clearAnalysis();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, apiKeys[provider]]);
+    const currentDeps = { provider, apiKey: apiKeys[provider] };
+    const prevDeps = prevDepsRef.current;
+    
+    // This check ensures the effect only runs on subsequent renders when dependencies have actually changed
+    if (prevDeps && (prevDeps.provider !== currentDeps.provider || prevDeps.apiKey !== currentDeps.apiKey)) {
+      clearAnalysis();
+    }
+    
+    prevDepsRef.current = currentDeps;
+  }, [provider, apiKeys, clearAnalysis]);
 
   const analyzeRepository = async () => {
     if (loading || isAnalyzed) return;
@@ -56,12 +71,6 @@ export const useRepoAnalysis = (owner, name, defaultBranch, token) => {
     }
   };
 
-  const clearAnalysis = () => {
-    setAnalysis(null);
-    setIsAnalyzed(false);
-    setError(null);
-    localStorage.removeItem(cacheKey);
-  };
 
   return {
     analysis,
