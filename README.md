@@ -4,6 +4,7 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/e5141378-4fd4-448c-8795-c33cfb06e046/deploy-status)](https://app.netlify.com/projects/gitmystats/deploys)
 
 A modern, interactive dashboard for visualizing GitHub repository statistics with a beautiful UI built using React, Vite, and Radix UI components. Track traffic, clones, forks, pull requests, and issues across all your repositories in one place.
 
@@ -27,7 +28,7 @@ A modern, interactive dashboard for visualizing GitHub repository statistics wit
 
 ### 📊 Detailed Repository View
 
-![Detailled View](assets/detailed_view.png)  
+![Detailed View](assets/detailed_view.png)  
 
 - **Smooth Animations**: Cards expand with fluid animations into full-screen detail views
 - **Comprehensive Statistics**:
