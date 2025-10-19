@@ -4,16 +4,14 @@ import { AlertCircle, Brain, Calendar, Code, ExternalLink, Eye, GitFork, GitPull
 import { useState } from 'react';
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLLM } from '../contexts/LLMContext';
-import { useGitHubAPI } from '../hooks/useGitHubAPI';
 import { useRepoAnalysis } from '../hooks/useRepoAnalysis';
 import { LLMSettingsDialog } from './LLMSettingsDialog';
 import { RepoAnalysis } from './RepoAnalysis';
 import { Button } from './ui/button';
 
-export const RepoDetail = ({ repo, onClose, layoutId }) => {
+export const RepoDetail = ({ repo, onClose, layoutId, token }) => {
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const { token } = useGitHubAPI();
   const { isConfigured } = useLLM();
   const { analysis, loading, error, analyzeRepository, isAnalyzed } = useRepoAnalysis(repo.owner, repo.name, repo.defaultBranch || 'main', token);
   

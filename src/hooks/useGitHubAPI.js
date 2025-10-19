@@ -80,6 +80,7 @@ export const useGitHubAPI = (token) => {
               language: repo.language,
               updatedAt: repo.updated_at,
               createdAt: repo.created_at,
+              defaultBranch: repo.default_branch,
               // Social image (OpenGraph image)
               socialImage: `https://opengraph.githubassets.com/1/${repo.full_name}`,
               // Traffic stats
@@ -109,6 +110,7 @@ export const useGitHubAPI = (token) => {
               language: repo.language,
               updatedAt: repo.updated_at,
               createdAt: repo.created_at,
+              defaultBranch: repo.default_branch || 'main',
               socialImage: `https://opengraph.githubassets.com/1/${repo.full_name}`,
               views: 0,
               uniqueViews: 0,
@@ -140,4 +142,3 @@ export const useGitHubAPI = (token) => {
 
   return { repositories, loading, error, refetch: fetchRepositories };
 };
-

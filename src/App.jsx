@@ -94,6 +94,7 @@ function App() {
           repositories={repositories}
           loading={loading}
           error={error}
+          token={submittedToken}
         />
       )}
     </LLMProvider>
