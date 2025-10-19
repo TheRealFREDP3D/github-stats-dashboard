@@ -6,7 +6,7 @@ import { LLMSettingsDialog } from './LLMSettingsDialog';
 import { RepoCard } from './RepoCard';
 import { RepoDetail } from './RepoDetail';
 
-export const Dashboard = ({ repositories, loading, error }) => {
+export const Dashboard = ({ repositories, loading, error, token }) => {
   const [selectedRepo, setSelectedRepo] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -54,6 +54,7 @@ export const Dashboard = ({ repositories, loading, error }) => {
             repo={selectedRepo}
             onClose={() => setSelectedRepo(null)}
             layoutId={`repo-${selectedRepo.id}`}
+            token={token}
           />
         ) : (
           <div key="grid" className="container mx-auto px-4 py-8">

@@ -1,12 +1,17 @@
-pnpm approve-builds# GitHub Stats Dashboard
+# GitHub Stats Dashboard
 
-An interactive dashboard for visualizing GitHub repository statistics including traffic, clones, forks, pull requests, and issues.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+
+A modern, interactive dashboard for visualizing GitHub repository statistics with a beautiful UI built using React, Vite, and Radix UI components. Track traffic, clones, forks, pull requests, and issues across all your repositories in one place.
 
 ## Features
 
-### Repository Overview Cards
+### 🏠 Repository Overview Cards
 
-![Overview Cards](assets/main_page.png)
+![Overview Cards](assets/main_page.png)  
 
 - **Grid Layout**: Clean, responsive card-based layout displaying all your repositories
 - **Key Metrics**: Each card shows:
@@ -20,10 +25,9 @@ An interactive dashboard for visualizing GitHub repository statistics including 
 - **Repository Icons**: Uses GitHub's social preview images (OpenGraph images) as repository icons
 - **Hover Effects**: Smooth animations and visual feedback on card hover
 
-### Detailed Repository View
+### 📊 Detailed Repository View
 
-![Detailled View](assets/detailed_view.png)
-
+![Detailled View](assets/detailed_view.png)  
 
 - **Smooth Animations**: Cards expand with fluid animations into full-screen detail views
 - **Comprehensive Statistics**:
@@ -34,18 +38,27 @@ An interactive dashboard for visualizing GitHub repository statistics including 
 - **Visual Data**: Area charts powered by Recharts showing views and clones over time
 - **Easy Navigation**: Click anywhere outside or use the close button to return to the grid
 
-### Secure Authentication
+### 🔐 Secure Authentication
 
 - **Personal Access Token**: Uses GitHub PAT for secure API access
 - **Local Storage**: Token is stored only in your browser, never sent to any server except GitHub
 - **Privacy First**: All API calls go directly from your browser to GitHub
 
-### AI-Powered Code Analysis
+### 🤖 AI-Powered Code Analysis
 
 - **Multi-Provider Support**: Support for multiple LLM providers (OpenRouter, Gemini, OpenAI)
 - **Repository Architecture Understanding**: Analyzes overall project structure and design patterns
+  
+![LLM Analysis - Overview](assets/llm_overview.png)
+
 - **Per-File Code Summaries**: Provides detailed explanations of individual files and their purposes
+
+![LLM File Analysis](assets/llm_file_analysis.png)
+
 - **Improvement Suggestions**: Offers actionable recommendations for code quality and optimization
+
+![LLM Suggestions](assets/llm_suggestions.png)
+
 - **Context Management**: Uses React Context API for LLM configuration and state management
 
 #### LLM Integration Architecture
@@ -78,15 +91,12 @@ The AI analysis feature consists of several key components:
 
 ![Landing Page](assets/landing_page.png)  
 
-
 ### Prerequisites
 
 - A GitHub account
 - A GitHub Personal Access Token with appropriate permissions
 
-
-
-### Creating a GitHub Personal Access Token
+### 🔑 Creating a GitHub Personal Access Token
 
 1. Go to [GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
 2. Click **"Generate new token (classic)"**
@@ -97,7 +107,7 @@ The AI analysis feature consists of several key components:
 5. Click **"Generate token"**
 6. **Copy the token immediately** - you won't be able to see it again!
 
-### Using the Dashboard
+### 🖥️ Using the Dashboard
 
 1. Open the deployed dashboard URL
 2. Paste your GitHub Personal Access Token into the input field
@@ -354,7 +364,17 @@ Potential features for future versions:
 - Never share your tokens or commit them to version control
 - LLM API keys are stored in your browser's localStorage; consider rotating them regularly and avoid using keys with excessive permissions
 
-## License
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## 🙏 Acknowledgments
+
+- [GitHub REST API](https://docs.github.com/en/rest)
+- [Vite](https://vitejs.dev/) for the amazing development experience
+- [Radix UI](https://www.radix-ui.com/) for accessible UI primitives
+- [Tailwind CSS](https://tailwindcss.com/) for utility-first CSS
+- [Lucide](https://lucide.dev/) for beautiful icons
 
 This project is open source and available for personal and commercial use.
 

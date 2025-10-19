@@ -10,7 +10,7 @@ export const useRepoAnalysis = (owner, name, defaultBranch, token) => {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzed, setIsAnalyzed] = useState(false);
 
-  const cacheKey = `repo-analysis-${owner}-${name}`;
+  const cacheKey = `repo-analysis-${owner}-${name}-${defaultBranch}`;
 
   useEffect(() => {
     // Load cached analysis on mount
@@ -25,6 +25,12 @@ export const useRepoAnalysis = (owner, name, defaultBranch, token) => {
       }
     }
   }, [cacheKey]);
+
+  // Clear analysis when provider or API key changes
+  useEffect(() => {
+    clearAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [provider, apiKeys[provider]]);
 
   const analyzeRepository = async () => {
     if (loading || isAnalyzed) return;
