@@ -232,7 +232,7 @@ The expanded detail view includes:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/TheRealFREDP3D/github-stats-dashboard
 cd github-stats-dashboard
 
 # Install dependencies
