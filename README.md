@@ -8,9 +8,14 @@
 
 A modern, interactive dashboard for visualizing GitHub repository statistics with a beautiful UI built using React, Vite, and Radix UI components. Track traffic, clones, forks, pull requests, and issues across all your repositories in one place.
 
+- The app is deployed at [https://gitmystats.netlify.app](https://gitmystats.netlify.app/). All you need is a Github Token and you are good to go.
+- Or deploy it localy using the command `pnpm run dev` and open the server address (`http://localhost:5173`) in a browser.
+
+---
+
 ## Features
 
-### 🏠 Repository Overview Cards
+### Repository Overview Cards
 
 ![Overview Cards](assets/main_page.png)  
 
@@ -26,7 +31,7 @@ A modern, interactive dashboard for visualizing GitHub repository statistics wit
 - **Repository Icons**: Uses GitHub's social preview images (OpenGraph images) as repository icons
 - **Hover Effects**: Smooth animations and visual feedback on card hover
 
-### 📊 Detailed Repository View
+### Detailed Repository View
 
 ![Detailed View](assets/detailed_view.png)  
 
@@ -39,13 +44,13 @@ A modern, interactive dashboard for visualizing GitHub repository statistics wit
 - **Visual Data**: Area charts powered by Recharts showing views and clones over time
 - **Easy Navigation**: Click anywhere outside or use the close button to return to the grid
 
-### 🔐 Secure Authentication
+### Secure Authentication
 
 - **Personal Access Token**: Uses GitHub PAT for secure API access
 - **Local Storage**: Token is stored only in your browser, never sent to any server except GitHub
 - **Privacy First**: All API calls go directly from your browser to GitHub
 
-### 🤖 AI-Powered Code Analysis
+### AI-Powered Code Analysis
 
 - **Multi-Provider Support**: Support for multiple LLM providers (OpenRouter, Gemini, OpenAI)
 - **Repository Architecture Understanding**: Analyzes overall project structure and design patterns
@@ -97,7 +102,7 @@ The AI analysis feature consists of several key components:
 - A GitHub account
 - A GitHub Personal Access Token with appropriate permissions
 
-### 🔑 Creating a GitHub Personal Access Token
+### Creating a GitHub Personal Access Token
 
 1. Go to [GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)](https://github.com/settings/tokens)
 2. Click **"Generate new token (classic)"**
@@ -108,7 +113,7 @@ The AI analysis feature consists of several key components:
 5. Click **"Generate token"**
 6. **Copy the token immediately** - you won't be able to see it again!
 
-### 🖥️ Using the Dashboard
+### Using the Dashboard
 
 1. Open the deployed dashboard URL
 2. Paste your GitHub Personal Access Token into the input field
@@ -232,7 +237,7 @@ The expanded detail view includes:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/TheRealFREDP3D/github-stats-dashboard
 cd github-stats-dashboard
 
 # Install dependencies
@@ -365,11 +370,11 @@ Potential features for future versions:
 - Never share your tokens or commit them to version control
 - LLM API keys are stored in your browser's localStorage; consider rotating them regularly and avoid using keys with excessive permissions
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [GitHub REST API](https://docs.github.com/en/rest)
 - [Vite](https://vitejs.dev/) for the amazing development experience
