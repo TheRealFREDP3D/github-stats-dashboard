@@ -2,7 +2,7 @@
 
 ## Directory Layout
 
-```
+```sh
 src/
 ├── components/           # React components
 │   ├── ui/              # shadcn/ui components (46+ reusable UI primitives)

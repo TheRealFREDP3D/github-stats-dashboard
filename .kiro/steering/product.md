@@ -12,6 +12,7 @@ A modern React-based dashboard for visualizing GitHub repository statistics with
 ## Target Users
 
 Developers and repository maintainers who want to:
+
 - Track repository performance and engagement
 - Analyze code structure and quality using AI
 - Monitor traffic patterns and clone statistics
