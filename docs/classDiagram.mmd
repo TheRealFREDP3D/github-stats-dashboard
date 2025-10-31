@@ -1,0 +1,33 @@
+classDiagram
+  class LLMProvider {
+    - provider: string
+    - apiKeys: object
+    - isConfigured: boolean
+    + setProvider(newProvider)
+    + setApiKey(providerKey, key)
+  }
+
+  class LLMContext {
+    <<context>>
+  }
+
+  class useLLM {
+    <<hook>>
+    + provider
+    + apiKeys
+    + isConfigured
+    + setProvider(newProvider)
+    + setApiKey(providerKey, key)
+  }
+
+  LLMProvider --> LLMContext : provides
+  useLLM --> LLMContext : consumes
+  LLMProvider --> useLLM : exposes state
+
+  class LocalStorage {
+    <<Web API>>
+    + getItem(key)
+    + setItem(key, value)
+  }
+
+  LLMProvider --> LocalStorage : persists/loads state
