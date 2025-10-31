@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <mxfile host="codeviz.app" modified="2025-10-31T11:01:40.533Z" agent="CodeViz Exporter" version="14.6.5" type="device">
+          <diagram id="codeviz-diagram" name="System Diagram">
+            <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+              <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                
+                <mxCell id="temp-wrapper-0ffd4ce5-25c4-4a49-8487-c44c5daa85af" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="1">
+                      <mxGeometry x="0" y="0" width="120" height="60" as="geometry"/>
+                    </mxCell>
+<mxCell id="1a102a3f-report" value="# LLM Configuration Context (`LLMContext.jsx`)
+
+## Overview
+
+The file `/src/contexts/LLMContext.jsx` in the Github-Stats-Dashboard project serves as a React Context for managing the application&apos;s Large Language Model (LLM) provider selection and its associated API keys. Crucially, this component does **not** directly act as an LLM API client. Instead, it functions as a centralized **configuration layer**, providing the necessary settings for an external LLM API service to make actual API calls.
+
+## Purpose
+
+The primary purpose of `LLMContext.jsx` is to:
+
+-   **Centralize LLM Configuration**: Store the currently selected LLM provider (e.g., &apos;openrouter&apos;, &apos;gemini&apos;, &apos;openai&apos;) and their respective API keys.
+-   **Provide Global Access**: Make this configuration easily accessible to any part of the application without prop drilling.
+-   **Persist Preferences**: Save user&apos;s LLM provider and API key preferences across browser sessions using `localStorage`.
+-   **Indicate Readiness**: Provide a derived state (`isConfigured`) to quickly check if a valid LLM provider and key are present.
+
+## Key Components and Structure
+
+### `LLMContext` Object
+
+This is the actual React Context created using `createContext()`. It&apos;s the mechanism through which the LLM configuration value is passed down the component tree.
+
+### `LLMProvider` Component
+
+This is a React functional component that acts as the provider for the `LLMContext`. It encapsulates the state management and logic for the LLM configuration.
+
+-   **Internal State**: Manages the following state variables using `useState` and `useEffect` hooks:
+    -   `provider`: A string representing the currently selected LLM (e.g., &apos;openrouter&apos;). Defaults to &apos;openrouter&apos;.
+    -   `apiKeys`: An object mapping LLM provider names to their respective API keys. Initialized with empty strings for supported providers.
+    -   `isConfigured`: A boolean derived state indicating whether a `provider` is selected and its corresponding `apiKeys` entry is non-empty.
+-   **Methods**: Exposes functions to update its internal state:
+    -   `setProvider(newProvider)`: Updates the `provider` state.
+    -   `setApiKey(providerKey, key)`: Updates a specific API key within the `apiKeys` object.
+-   **Persistence**: Uses `useEffect` hooks to synchronize the `provider` and `apiKeys` state with `localStorage`, ensuring data persistence across sessions.
+
+### `useLLM()` Hook
+
+This is a custom React hook that simplifies consuming the `LLMContext`. Any functional component within the `LLMProvider`&apos;s tree can call `useLLM()` to access the current `provider`, `apiKeys`, `isConfigured`, and the `setProvider`/`setApiKey` functions. It includes a check to ensure it&apos;s used within an `LLMProvider` to prevent runtime errors.
+
+## Interactions
+
+### With `localStorage`
+
+`LLMProvider` interacts directly with the browser&apos;s `localStorage` to:
+
+-   **Load State**: Retrieve previously saved `provider` and `apiKeys` when the component mounts.
+-   **Save State**: Persist changes to `provider` and `apiKeys` whenever they are updated.
+
+### With Application Components
+
+Application components that need to configure or use LLM functionality interact with `LLMContext.jsx` indirectly by:
+
+-   **Wrapping**: Being rendered as children of the `LLMProvider` component.
+-   **Consuming**: Calling the `useLLM()` hook to access the current LLM configuration and update functions.
+
+### With an External LLM API Service (Conceptual)
+
+While `LLMContext.jsx` itself does not make API calls, it provides the essential configuration to a separate, conceptual `LLM API Service` (e.g., a file like `src/services/llmService.js`). This service would:
+
+1.  **Obtain Configuration**: Use the `useLLM()` hook (or directly access the context value) to get the `provider` and `apiKeys`.
+2.  **Construct Requests**: Use this information to build and authenticate requests to the chosen LLM provider&apos;s API endpoint.
+
+## Role Clarification: Configuration vs. Client
+
+It is critical to understand that `LLMContext.jsx` functions purely as a **configuration management system**. It provides the *parameters* (which LLM to use, what API key) needed for LLM interactions. The actual HTTP requests to external LLM APIs would be handled by a separate module or service that consumes these parameters.
+
+## Diagram: LLM Configuration Context Internal Structure and Interactions
+
+```mermaid
+C4Component
+    title LLM Configuration Context (LLMContext.jsx)
+
+    Component(LLMProvider, &quot;LLMProvider Component&quot;, &quot;React Context Provider&quot;) {
+        Container(State, &quot;Internal State&quot;, &quot;React useState/useEffect&quot;) {
+            Component(ProviderVar, &quot;provider&quot;, &quot;string&quot;, &quot;Current LLM provider (e.g., &apos;openrouter&apos;)&quot;)
+            Component(ApiKeysVar, &quot;apiKeys&quot;, &quot;object&quot;, &quot;Map of LLM provider to API key&quot;)
+            Component(IsConfiguredVar, &quot;isConfigured&quot;, &quot;boolean&quot;, &quot;Derived state: provider &amp; key present&quot;)
+        }
+        Component(SetProviderFunc, &quot;setProvider(newProvider)&quot;, &quot;Function&quot;, &quot;Updates &apos;provider&apos; state&quot;)
+        Component(SetApiKeyFunc, &quot;setApiKey(providerKey, key)&quot;, &quot;Function&quot;, &quot;Updates &apos;apiKeys&apos; state for a provider&quot;)
+    }
+
+    Component(LLMContextObject, &quot;LLMContext Object&quot;, &quot;React Context&quot;, &quot;Provides LLM configuration to consumers&quot;)
+
+    Component(UseLLMHook, &quot;useLLM() Hook&quot;, &quot;Custom React Hook&quot;, &quot;Consumes LLMContext, provides access to config&quot;)
+
+    Boundary(LocalStorageBoundary, &quot;Browser Local Storage&quot;) {
+        Component(LocalStorage, &quot;localStorage&quot;, &quot;Web API&quot;, &quot;Persists &apos;provider&apos; and &apos;apiKeys&apos;&quot;)
+    }
+
+    Rel(LLMProvider, State, &quot;Manages&quot;, &quot;React useState/useEffect&quot;)
+    Rel(LLMProvider, LLMContextObject, &quot;Provides value to&quot;, &quot;via .Provider&quot;)
+    Rel(LLMProvider, LocalStorage, &quot;Persists/Loads state from&quot;, &quot;via useEffect&quot;)
+
+    Rel(UseLLMHook, LLMContextObject, &quot;Consumes&quot;, &quot;via useContext&quot;)
+
+    Component(ApplicationComponent, &quot;Application Components&quot;, &quot;React Components&quot;, &quot;UI elements that need LLM configuration&quot;)
+    Rel(ApplicationComponent, UseLLMHook, &quot;Uses&quot;, &quot;to get LLM config&quot;)
+
+    Component(LLMAPIService, &quot;LLM API Service&quot;, &quot;JavaScript Module (e.g., llmService.js)&quot;, &quot;Makes actual API calls to LLM providers&quot;)
+    Rel(LLMAPIService, UseLLMHook, &quot;Receives config from&quot;, &quot;indirectly via ApplicationComponent / direct import of useLLM&quot;)
+    note right of LLMAPIService
+        `LLMContext.jsx` does NOT make API calls.
+        It provides the *configuration* for an
+        external `LLM API Service` to use.
+    end note
+```" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="temp-wrapper-0ffd4ce5-25c4-4a49-8487-c44c5daa85af">
+                      <mxGeometry x="8438.316405330394" y="514.502867101687" width="13425" height="1428" as="geometry"/>
+                    </mxCell>
+                
+              </root>
+            </mxGraphModel>
+          </diagram>
+        </mxfile>

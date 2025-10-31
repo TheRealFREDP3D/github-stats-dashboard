@@ -13,6 +13,24 @@ A modern, interactive dashboard for visualizing GitHub repository statistics wit
 
 ---
 
+## Documentation
+
+- **[Contributing Guide](CONTRIBUTING.md)** - Guidelines for contributing to this project
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines and standards
+- **[Security Policy](SECURITY.md)** - Security practices and vulnerability reporting
+- **[Media Assets](MEDIA.md)** - Project media and branding assets
+
+### Developer Documentation
+
+- **[Project Overview](docs/project_overview.md)** - High-level project architecture and design decisions
+- **[Dashboard Data Flow](docs/dashboard_data_flow.md)** - Detailed data flow and API interactions
+- **[GitHub Content Fetching](docs/github_content_fetching_doc.md)** - GitHub API integration details
+- **[LLM Architecture](docs/llm_architecture_doc.md)** - AI analysis system architecture
+- **[Diagrams](docs/diagrams.md)** - Visual documentation and flowcharts
+- **[Presentation](docs/Presentation.md)** - Project presentation materials
+
+---
+
 ## Features
 
 ### Repository Overview Cards
@@ -219,7 +237,7 @@ The expanded detail view includes:
 ### State Management
 
 - **GitHub API Hook** (`useGitHubAPI.js`) - Manages API calls, loading states, and error handling
-- **Mobile Detection Hook** (`use-mobile.js`) - Responsive behavior management
+- **Mobile Detection Hook** (`useMobile.js`) - Responsive behavior management
 - **LLM Context Provider** - Global state management for AI analysis configuration
 - **Local Storage Integration** - Persists user preferences and API keys
 
@@ -304,7 +322,7 @@ rm -rf node_modules/.vite
 
 ### Project Structure
 
-```
+```bash
 github-stats-dashboard/
 ├── src/
 │   ├── components/
@@ -315,7 +333,7 @@ github-stats-dashboard/
 │   │   ├── LLMSettingsDialog.jsx # LLM provider configuration
 │   │   └── RepoAnalysis.jsx # AI-powered code analysis component
 │   ├── hooks/
-│   │   ├── use-mobile.js    # Mobile detection hook
+│   │   ├── useMobile.js    # Mobile detection hook
 │   │   ├── useGitHubAPI.js  # GitHub API integration hook
 │   │   └── useRepoAnalysis.js # LLM analysis hook
 │   ├── services/
