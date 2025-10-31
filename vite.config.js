@@ -21,7 +21,42 @@ export default defineConfig({
     // Enable code splitting and chunking
     rollupOptions: {
       output: {
-        manualChunks: {
+// Instead of hard-coding every `@radix-ui/react-*` package (and the other lists) in manualChunks,
+// use a regex-based function to auto-group by folder. This keeps the same splits but is far more maintainable:
+build: {
+  /* … */
+  rollupOptions: {
+    output: {
+      manualChunks(id) {
+        if (!id.includes('node_modules')) return
+        // Radix UI: any @radix-ui/react-*
+        if (/node_modules\/@radix-ui\/react-[^/]+/.test(id)) {
+          return 'radix-ui'
+        }
+        // React vendor
+        if (/node_modules\/(react|react-dom|react-router-dom)\//.test(id)) {
+          return 'react-vendor'
+        }
+        // Charts
+        if (/node_modules\/recharts\//.test(id)) {
+          return 'charts'
+        }
+        // Form libs
+        if (/node_modules\/(react-hook-form|@hookform\/resolvers|zod)\//.test(id)) {
+          return 'form-libraries'
+        }
+        // Misc UI utilities
+        if (/node_modules\/(framer-motion|lucide-react|class-variance-authority|clsx|tailwind-merge|date-fns)\//.test(id)) {
+          return 'ui-utilities'
+        }
+      },
+      chunkFileNames:   'assets/[name]-[hash].js',
+      entryFileNames:   'assets/[name]-[hash].js',
+      assetFileNames:   'assets/[name]-[hash].[ext]',
+    },
+  },
+  /* … */
+}
           // Vendor chunks - separate large libraries
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'radix-ui': [
