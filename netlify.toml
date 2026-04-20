@@ -1,9 +1,20 @@
 [build]
   publish = "dist/public"
   command = "pnpm build"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/auth/github/login-url"
+  to = "/.netlify/functions/github-login-url"
+  status = 200
+
+[[redirects]]
+  from = "/auth/github/callback"
+  to = "/.netlify/functions/github-callback"
+  status = 200
 
 [[redirects]]
   from = "/*"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -7,10 +7,31 @@ import Dashboard from "./pages/Dashboard";
 import TokenInput from "./pages/TokenInput";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 function App() {
   const [token, setToken] = useState<string>("");
   const [username, setUsername] = useState<string>("");
+
+  // Handle OAuth callback from GitHub
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthStatus = urlParams.get('oauth');
+    const accessToken = urlParams.get('access_token');
+
+    if (oauthStatus === 'success' && accessToken) {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Set the token and notify user
+      setToken(accessToken);
+      toast.success('Successfully authenticated with GitHub!');
+    } else if (oauthStatus === 'error') {
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      toast.error('GitHub authentication failed. Please try again.');
+    }
+  }, []);
 
   const handleTokenSubmit = (
     submittedToken: string,
