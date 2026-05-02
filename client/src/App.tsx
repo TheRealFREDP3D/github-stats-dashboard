@@ -23,9 +23,27 @@ function App() {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Set the token and notify user
-      setToken(accessToken);
-      toast.success('Successfully authenticated with GitHub!');
+      // Validate the token by making a test API call
+      fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `token ${accessToken}`,
+          Accept: 'application/vnd.github.v3+json'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Set the token and notify user
+            setToken(accessToken);
+            toast.success('Successfully authenticated with GitHub!');
+          } else {
+            console.error('[OAuth] Token validation failed:', response.status);
+            toast.error('GitHub authentication failed. Token is invalid.');
+          }
+        })
+        .catch(error => {
+          console.error('[OAuth] Token validation error:', error);
+          toast.error('GitHub authentication failed. Please try again.');
+        });
     } else if (oauthStatus === 'error') {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);

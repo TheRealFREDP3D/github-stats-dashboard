@@ -66,7 +66,7 @@ export function handleOAuthError(error: unknown): string {
 export async function initiateGitHubLogin(): Promise<void> {
   try {
     // This would typically call your backend to get the OAuth URL
-    const response = await fetch('/api/auth/github/login-url');
+    const response = await fetch('/.netlify/functions/github-login-url');
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
