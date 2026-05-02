@@ -1,17 +1,52 @@
 import { Handler } from '@netlify/functions';
 
-export const handler: Handler = async (event: any) => {
+interface CallbackQueryParams {
+  code?: string;
+  state?: string;
+}
+
+const parseCookies = (cookieHeader: string): Record<string, string> => {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+  
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, value] = cookie.trim().split('=');
+    if (name && value) {
+      cookies[name] = value;
+    }
+  });
+  
+  return cookies;
+};
+
+export const handler: Handler = async (event) => {
   try {
-    const { code, state } = event.queryStringParameters || {};
+    const { code, state } = (event.queryStringParameters || {}) as CallbackQueryParams;
     
-    if (!code) {
+    // Validate CSRF state
+    const cookies = parseCookies(event.headers.cookie || '');
+    const storedState = cookies.github_oauth_state;
+    
+    if (!state || !storedState || state !== storedState) {
+      console.error('CSRF state validation failed');
       return {
-        statusCode: 400,
-        body: "Authorization code not provided",
+        statusCode: 302,
+        multiValueHeaders: {
+          Location: ['/?oauth=error&error=csrf_validation_failed'],
+          'Set-Cookie': ['github_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'],
+        },
       };
     }
 
-    // Exchange the code for an access token
+    if (!code) {
+      return {
+        statusCode: 302,
+        multiValueHeaders: {
+          Location: ['/?oauth=error&error=no_authorization_code'],
+          'Set-Cookie': ['github_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'],
+        },
+      };
+    }
     const clientId = process.env.GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
     
@@ -41,25 +76,31 @@ export const handler: Handler = async (event: any) => {
       console.error('GitHub OAuth error:', tokenData);
       return {
         statusCode: 302,
-        headers: {
-          Location: `/?oauth=error&error=${encodeURIComponent(tokenData.error_description || tokenData.error)}`,
+        multiValueHeaders: {
+          Location: [`/?oauth=error&error=${encodeURIComponent(tokenData.error_description || tokenData.error)}`],
+          'Set-Cookie': ['github_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'],
         },
       };
     }
 
-    // Redirect to frontend with the access token
+    // Store the access token in a secure HTTP-only cookie
     return {
       statusCode: 302,
-      headers: {
-        Location: `/?oauth=success&access_token=${tokenData.access_token}&state=${state}`,
+      multiValueHeaders: {
+        Location: ['/?oauth=success'],
+        'Set-Cookie': [
+          `github_access_token=${tokenData.access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`,
+          'github_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+        ],
       },
     };
   } catch (error) {
     console.error("OAuth callback error:", error);
     return {
       statusCode: 302,
-      headers: {
-        Location: `/?oauth=error`,
+      multiValueHeaders: {
+        Location: ['/?oauth=error'],
+        'Set-Cookie': ['github_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'],
       },
     };
   }

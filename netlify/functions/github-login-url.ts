@@ -1,6 +1,7 @@
 import { Handler } from '@netlify/functions';
+import crypto from 'crypto';
 
-export const handler: Handler = async (event: any) => {
+export const handler: Handler = async (event) => {
   try {
     const clientId = process.env.GITHUB_CLIENT_ID;
     
@@ -13,8 +14,19 @@ export const handler: Handler = async (event: any) => {
       };
     }
 
-    const redirectUri = process.env.GITHUB_REDIRECT_URI || 'https://quickhubpulse.netlify.app/auth/github/callback';
-    const state = Math.random().toString(36).substring(2, 15);
+    const redirectUri = process.env.GITHUB_REDIRECT_URI;
+    
+    if (!redirectUri) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: "GitHub OAuth not configured. Please set GITHUB_REDIRECT_URI environment variable for this environment (e.g. http://localhost:8888/auth/github/callback)."
+        }),
+      };
+    }
+
+    // Generate a cryptographically strong random state value for CSRF protection
+    const state = crypto.randomBytes(16).toString('hex');
     
     const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo,user&state=${state}`;
     
@@ -22,6 +34,10 @@ export const handler: Handler = async (event: any) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
+        // Persist state in an HTTP-only, secure cookie so it can be validated on the callback
+        'Set-Cookie': [
+          `github_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+        ],
       },
       body: JSON.stringify({ url: authUrl }),
     };

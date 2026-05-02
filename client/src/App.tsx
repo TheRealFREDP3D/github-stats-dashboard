@@ -17,37 +17,54 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const oauthStatus = urlParams.get('oauth');
-    const accessToken = urlParams.get('access_token');
 
-    if (oauthStatus === 'success' && accessToken) {
-      // Clear URL parameters
+    if (oauthStatus === 'success') {
+      // Clear URL parameters immediately
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Validate the token by making a test API call
-      fetch('https://api.github.com/user', {
-        headers: {
-          Authorization: `token ${accessToken}`,
-          Accept: 'application/vnd.github.v3+json'
-        }
-      })
+      // Retrieve the access token securely from the server
+      fetch('/.netlify/functions/get-token')
         .then(response => {
           if (response.ok) {
-            // Set the token and notify user
-            setToken(accessToken);
-            toast.success('Successfully authenticated with GitHub!');
+            return response.json();
+          }
+          throw new Error('Failed to retrieve token');
+        })
+        .then(data => {
+          if (data.access_token) {
+            // Validate the token by making a test API call
+            return fetch('https://api.github.com/user', {
+              headers: {
+                Authorization: `token ${data.access_token}`,
+                Accept: 'application/vnd.github.v3+json'
+              }
+            }).then(apiResponse => {
+              if (apiResponse.ok) {
+                // Set the token and notify user
+                setToken(data.access_token);
+                toast.success('Successfully authenticated with GitHub!');
+              } else {
+                console.error('[OAuth] Token validation failed:', apiResponse.status);
+                toast.error('GitHub authentication failed. Token is invalid.');
+              }
+            });
           } else {
-            console.error('[OAuth] Token validation failed:', response.status);
-            toast.error('GitHub authentication failed. Token is invalid.');
+            throw new Error('No access token received');
           }
         })
         .catch(error => {
-          console.error('[OAuth] Token validation error:', error);
+          console.error('[OAuth] Token retrieval error:', error);
           toast.error('GitHub authentication failed. Please try again.');
         });
     } else if (oauthStatus === 'error') {
       // Clear URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
-      toast.error('GitHub authentication failed. Please try again.');
+      const error = urlParams.get('error');
+      if (error === 'csrf_validation_failed') {
+        toast.error('Security validation failed. Please try logging in again.');
+      } else {
+        toast.error('GitHub authentication failed. Please try again.');
+      }
     }
   }, []);
 
