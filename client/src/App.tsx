@@ -8,6 +8,7 @@ import TokenInput from "./pages/TokenInput";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { getPKCEParams, clearPKCEParams, validateState } from "./utils/pkce";
 
 function App() {
   const [token, setToken] = useState<string>("");
@@ -15,15 +16,17 @@ function App() {
 
   // Handle OAuth callback from GitHub
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(window.location.hash.substring(1) || window.location.search);
     const oauthStatus = urlParams.get('oauth');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
 
     if (oauthStatus === 'success') {
       // Clear URL parameters immediately
       window.history.replaceState({}, document.title, window.location.pathname);
       
       // Retrieve the access token securely from the server
-      fetch('/.netlify/functions/get-token')
+      fetch('/api/auth/token')
         .then(response => {
           if (response.ok) {
             return response.json();
@@ -35,7 +38,7 @@ function App() {
             // Validate the token by making a test API call
             return fetch('https://api.github.com/user', {
               headers: {
-                Authorization: `token ${data.access_token}`,
+                Authorization: `Bearer ${data.access_token}`,
                 Accept: 'application/vnd.github.v3+json'
               }
             }).then(apiResponse => {
@@ -43,6 +46,7 @@ function App() {
                 // Set the token and notify user
                 setToken(data.access_token);
                 toast.success('Successfully authenticated with GitHub!');
+                clearPKCEParams();
               } else {
                 console.error('[OAuth] Token validation failed:', apiResponse.status);
                 toast.error('GitHub authentication failed. Token is invalid.');
@@ -65,6 +69,68 @@ function App() {
       } else {
         toast.error('GitHub authentication failed. Please try again.');
       }
+      clearPKCEParams();
+    } else if (code && state) {
+      // Handle PKCE callback - exchange code for token
+      const pkceParams = getPKCEParams();
+      
+      if (!pkceParams.codeVerifier || !validateState(state)) {
+        toast.error('Invalid OAuth state. Please try logging in again.');
+        clearPKCEParams();
+        return;
+      }
+
+      // Exchange authorization code for access token
+      fetch('/api/auth/exchange-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code,
+          code_verifier: pkceParams.codeVerifier,
+          state: state,
+        }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => {
+              throw new Error(err.error || 'Token exchange failed');
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.access_token) {
+            // Validate the token by making a test API call
+            return fetch('https://api.github.com/user', {
+              headers: {
+                Authorization: `Bearer ${data.access_token}`,
+                Accept: 'application/vnd.github.v3+json'
+              }
+            }).then(apiResponse => {
+              if (apiResponse.ok) {
+                // Set the token and notify user
+                setToken(data.access_token);
+                toast.success('Successfully authenticated with GitHub!');
+                clearPKCEParams();
+                // Clear URL parameters
+                window.history.replaceState({}, document.title, window.location.pathname);
+              } else {
+                console.error('[OAuth] Token validation failed:', apiResponse.status);
+                toast.error('GitHub authentication failed. Token is invalid.');
+                clearPKCEParams();
+              }
+            });
+          } else {
+            throw new Error('No access token received');
+          }
+        })
+        .catch(error => {
+          console.error('[OAuth] Token exchange error:', error);
+          toast.error(`GitHub authentication failed: ${error.message}`);
+          clearPKCEParams();
+        });
     }
   }, []);
 

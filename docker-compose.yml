@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: github-stats-dashboard
+    container_name: QuickHubPulse
     ports:
       - "3000:3000"
     environment:

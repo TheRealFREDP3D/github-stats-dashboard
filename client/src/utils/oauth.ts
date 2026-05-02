@@ -3,6 +3,14 @@
  * Prevents leaking sensitive error information to users
  */
 
+import {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  storePKCEParams,
+  clearPKCEParams,
+  validateState,
+} from './pkce';
+
 // Known OAuth error types with user-friendly messages
 const OAUTH_ERROR_MESSAGES = {
   NETWORK_ERROR: "Unable to connect to GitHub. Please check your internet connection and try again.",
@@ -61,12 +69,31 @@ export function handleOAuthError(error: unknown): string {
 }
 
 /**
- * Initiates GitHub OAuth login with proper error handling
+ * Initiates GitHub OAuth login with PKCE flow
  */
 export async function initiateGitHubLogin(): Promise<void> {
   try {
-    // This would typically call your backend to get the OAuth URL
-    const response = await fetch('/.netlify/functions/github-login-url');
+    // Generate PKCE parameters
+    const codeVerifier = await generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Store PKCE parameters for later use
+    storePKCEParams(codeVerifier, state);
+    
+    // Request OAuth URL from server with PKCE parameters
+    const response = await fetch('/api/auth/github/login-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code_challenge: codeChallenge,
+        state: state,
+      }),
+    });
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -86,6 +113,16 @@ export async function initiateGitHubLogin(): Promise<void> {
     throw new Error(handleOAuthError(error));
   }
 }
+
+// Re-export PKCE utilities
+export {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  storePKCEParams,
+  getPKCEParams,
+  clearPKCEParams,
+  validateState,
+} from './pkce';
 
 /**
  * Type for OAuth error handling in components

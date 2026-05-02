@@ -1,0 +1,20 @@
+{
+	"geolocation": {
+		"data": {
+			"city": "Toronto",
+			"country": {
+				"code": "CA",
+				"name": "Canada"
+			},
+			"subdivision": {
+				"code": "ON",
+				"name": "Ontario"
+			},
+			"timezone": "America/Toronto",
+			"latitude": 43.6934,
+			"longitude": -79.4857,
+			"postalCode": "M6M"
+		},
+		"timestamp": 1777741202182
+	}
+}
