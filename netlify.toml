@@ -14,22 +14,14 @@
 
 [dev.environment]
   GITHUB_CLIENT_ID = "test_client_id"
-  GITHUB_REDIRECT_URI = "http://localhost:3000/auth/github/callback"
+  GITHUB_REDIRECT_URI = "http://localhost:3000"
 
 [[redirects]]
   from = "/api/auth/github/login-url"
   to = "/.netlify/functions/github-login-url"
   status = 200
 
-[[redirects]]
-  from = "/auth/github/callback"
-  to = "/.netlify/functions/github-callback"
-  status = 200
 
-[[redirects]]
-  from = "/api/auth/token"
-  to = "/.netlify/functions/get-token"
-  status = 200
 
 [[redirects]]
   from = "/api/auth/exchange-token"

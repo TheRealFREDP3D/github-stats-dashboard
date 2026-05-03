@@ -115,3 +115,4 @@ temp/
 /.prettierignore
 /.prettierrc
 /package-lock.json
+/netlify/.env

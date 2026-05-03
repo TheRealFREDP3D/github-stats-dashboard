@@ -14,63 +14,13 @@ function App() {
   const [token, setToken] = useState<string>("");
   const [username, setUsername] = useState<string>("");
 
-  // Handle OAuth callback from GitHub
+  // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.hash.substring(1) || window.location.search);
-    const oauthStatus = urlParams.get('oauth');
     const code = urlParams.get('code');
     const state = urlParams.get('state');
 
-    if (oauthStatus === 'success') {
-      // Clear URL parameters immediately
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // Retrieve the access token securely from the server
-      fetch('/api/auth/token')
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          throw new Error('Failed to retrieve token');
-        })
-        .then(data => {
-          if (data.access_token) {
-            // Validate the token by making a test API call
-            return fetch('https://api.github.com/user', {
-              headers: {
-                Authorization: `Bearer ${data.access_token}`,
-                Accept: 'application/vnd.github.v3+json'
-              }
-            }).then(apiResponse => {
-              if (apiResponse.ok) {
-                // Set the token and notify user
-                setToken(data.access_token);
-                toast.success('Successfully authenticated with GitHub!');
-                clearPKCEParams();
-              } else {
-                console.error('[OAuth] Token validation failed:', apiResponse.status);
-                toast.error('GitHub authentication failed. Token is invalid.');
-              }
-            });
-          } else {
-            throw new Error('No access token received');
-          }
-        })
-        .catch(error => {
-          console.error('[OAuth] Token retrieval error:', error);
-          toast.error('GitHub authentication failed. Please try again.');
-        });
-    } else if (oauthStatus === 'error') {
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-      const error = urlParams.get('error');
-      if (error === 'csrf_validation_failed') {
-        toast.error('Security validation failed. Please try logging in again.');
-      } else {
-        toast.error('GitHub authentication failed. Please try again.');
-      }
-      clearPKCEParams();
-    } else if (code && state) {
+    if (code && state) {
       // Handle PKCE callback - exchange code for token
       const pkceParams = getPKCEParams();
       
