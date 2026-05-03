@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useState } from "react";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import Dashboard from "./pages/Dashboard";
 import TokenInput from "./pages/TokenInput";
 import { Button } from "@/components/ui/button";
@@ -99,7 +100,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="light" switchable={true}>
         <TooltipProvider>
           <Toaster />
           {!(token || username) ? (

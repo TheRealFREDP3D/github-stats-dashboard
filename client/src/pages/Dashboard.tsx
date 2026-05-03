@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { RepositoryCard } from "@/components/RepositoryCard";
 import { RepositoryDetail } from "@/components/RepositoryDetail";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { useGitHubAPI, Repository } from "@/hooks/useGitHubAPI";
 import { ErrorCode } from "@/errors";
 import { useLocalStats } from "@/hooks/useLocalStats";
@@ -136,14 +137,17 @@ export default function Dashboard({
               )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            onClick={onLogout}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeSelector />
+            <Button
+              variant="ghost"
+              onClick={onLogout}
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"
