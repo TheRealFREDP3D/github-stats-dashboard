@@ -190,5 +190,19 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    proxy: {
+      '/api/auth/github/login-url': {
+        target: 'http://localhost:8991',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/auth/github/login-url', '/.netlify/functions/github-login-url'),
+      },
+      '/api/auth/exchange-token': {
+        target: 'http://localhost:8991',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace('/api/auth/exchange-token', '/.netlify/functions/exchange-token'),
+      },
+    },
   },
 });

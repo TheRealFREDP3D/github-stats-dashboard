@@ -201,13 +201,18 @@ The dashboard supports three authentication methods:
 - Requires backend configuration with GitHub OAuth App
 - Currently in development - requires environment variables:
   - `GITHUB_CLIENT_ID`: Your GitHub OAuth App client ID
-  - `GITHUB_REDIRECT_URI`: OAuth callback URL (default: `http://localhost:3000/auth/github/callback`)
+  - `GITHUB_REDIRECT_URI`: OAuth callback URL (required for each environment)
 
 To set up OAuth:
 1. Create a GitHub OAuth App at [GitHub Settings → Developer settings → OAuth Apps](https://github.com/settings/applications/new)
-2. Set the callback URL to `http://localhost:3000/auth/github/callback`
-3. Copy the Client ID to your environment variables
+2. Set the callback URL appropriate for your environment:
+   - **Development**: `http://localhost:8888/auth/github/callback`
+   - **Staging**: `https://your-staging-url.netlify.app/auth/github/callback`
+   - **Production**: `https://quickhubpulse.netlify.app/auth/github/callback`
+3. Copy the Client ID and set the `GITHUB_REDIRECT_URI` environment variable to match your callback URL
 4. The OAuth flow will redirect back to the app after authentication
+
+**Important**: `GITHUB_REDIRECT_URI` is now required and must be set for each environment. It cannot use a default value to prevent misconfiguration between environments.
 
 ## Local Backend for Stats Persistence
 
