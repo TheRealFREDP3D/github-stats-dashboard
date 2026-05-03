@@ -117,20 +117,20 @@ export default function Dashboard({
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-30 bg-card border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Github className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Github className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">
+              <h1 className="text-xl font-bold text-foreground">
                 GitHub Stats Dashboard
               </h1>
               {username && (
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-muted-foreground">
                   Viewing public repositories for{" "}
                   <span className="font-medium">{username}</span>
                 </p>
@@ -165,12 +165,12 @@ export default function Dashboard({
       <main className="container mx-auto px-4 py-8">
         {/* Public Data Notice */}
         {username && !loading && !error && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="mb-6 p-4 bg-muted border border-border rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0">
+              <div className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0">
                 ℹ️
               </div>
-              <div className="text-sm text-amber-800">
+              <div className="text-sm text-muted-foreground">
                 <p className="font-medium mb-1">Public Access Mode</p>
                 <p className="text-xs">
                   You're viewing public repository information only. Traffic
@@ -184,10 +184,10 @@ export default function Dashboard({
 
         {/* Keyboard Hint */}
         {showKeyboardHint && filteredAndSortedRepositories.length > 0 && (
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start justify-between">
+          <div className="mb-6 p-3 bg-muted border border-border rounded-lg flex items-start justify-between">
             <div className="flex items-start gap-2">
-              <Keyboard className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-700">
+              <Keyboard className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-muted-foreground">
                 <p className="font-medium mb-1">
                   Keyboard shortcuts available:
                 </p>
@@ -198,7 +198,7 @@ export default function Dashboard({
             </div>
             <button
               onClick={() => setShowKeyboardHint(false)}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium ml-4 flex-shrink-0"
+              className="text-primary hover:text-primary/80 text-sm font-medium ml-4 flex-shrink-0"
             >
               Dismiss
             </button>
@@ -208,19 +208,19 @@ export default function Dashboard({
         {/* Search and Sort Bar */}
         <div className="mb-8 space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search repositories..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white border-slate-200"
+              className="pl-10 bg-background border-border"
             />
           </div>
           <div className="flex items-center gap-3">
             <label
               htmlFor="sort"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
             >
               Sort by:
             </label>
@@ -228,7 +228,7 @@ export default function Dashboard({
               value={sortBy}
               onValueChange={value => setSortBy(value as SortOption)}
             >
-              <SelectTrigger className="w-48 bg-white border-slate-200">
+              <SelectTrigger className="w-48 bg-background border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

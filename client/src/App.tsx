@@ -149,22 +149,22 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="max-w-md w-full text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-lg mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-destructive/10 rounded-lg mb-4">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
               Something went wrong
             </h1>
-            <p className="text-slate-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               An unexpected error occurred while loading the application.
             </p>
             
             <div className="space-y-3">
               <Button
                 onClick={this.handleReset}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again
@@ -181,10 +181,10 @@ class ErrorBoundary extends React.Component<
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="text-sm text-slate-500 cursor-pointer hover:text-slate-700">
+                <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
                   Error Details (Development)
                 </summary>
-                <div className="mt-2 p-3 bg-slate-100 rounded text-xs text-slate-700 overflow-auto max-h-32">
+                <div className="mt-2 p-3 bg-muted rounded text-xs text-muted-foreground overflow-auto max-h-32">
                   <pre className="whitespace-pre-wrap">
                     {this.state.error.toString()}
                     {this.state.errorInfo?.componentStack}

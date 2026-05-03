@@ -37,17 +37,17 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
 
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-lg mb-4">
-            <Github className="w-8 h-8 text-blue-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-lg mb-4">
+            <Github className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             GitHub Stats Dashboard
           </h1>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Quick overview of all your repositories in one place
           </p>
         </div>
@@ -56,10 +56,10 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
         {/* Divider */}
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-300"></div>
+            <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-gradient-to-br from-slate-50 to-slate-100 px-2 text-slate-600">
+            <span className="bg-background px-2 text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -68,14 +68,14 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-8">
           {/* Toggle between token, username, and OAuth */}
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+          <div className="flex gap-2 p-1 bg-muted rounded-lg">
             <button
               type="button"
               onClick={() => setUseToken(true)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 useToken
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Key className="w-4 h-4" />
@@ -86,8 +86,8 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
               onClick={() => setUseToken(false)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 !useToken
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <User className="w-4 h-4" />
@@ -98,15 +98,15 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
           <div className="space-y-2">
             <label
               htmlFor={useToken ? "token" : "username"}
-              className="text-sm font-semibold text-slate-700"
+              className="text-sm font-semibold text-foreground"
             >
               {useToken ? "Personal Access Token" : "GitHub Username"}
             </label>
             <div className="relative">
               {useToken ? (
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               ) : (
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               )}
               <Input
                 id={useToken ? "token" : "username"}
@@ -122,7 +122,7 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
                 required
               />
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {useToken
                 ? "Your token is stored locally and never sent to any server except GitHub API."
                 : "Fetch public repository information without requiring an access token."}
@@ -130,7 +130,7 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
           </div>
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             disabled={loading}
           >
             {loading
@@ -145,10 +145,10 @@ export default function TokenInput({ onSubmit }: TokenInputProps) {
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-300" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-50 px-2 text-slate-500">Or</span>
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
             </div>
           </div>
           <div className="mt-4">
