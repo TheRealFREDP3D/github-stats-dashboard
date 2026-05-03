@@ -32,10 +32,10 @@ export function RepositoryCard({
       tabIndex={0}
       role="button"
       aria-pressed={isFocused}
-      className={`bg-white border rounded-lg p-5 cursor-pointer transition-all duration-300 ${
+      className={`bg-card border rounded-lg p-5 cursor-pointer transition-all duration-300 ${
         isFocused
-          ? "border-blue-600 shadow-lg ring-2 ring-blue-400 ring-offset-2"
-          : "border-slate-200 hover:shadow-md hover:border-blue-300"
+          ? "border-primary shadow-lg ring-2 ring-primary/50 ring-offset-2"
+          : "border-border hover:shadow-md hover:border-primary"
       }`}
       whileHover={{ y: -4 }}
       initial={{ opacity: 0, y: 20 }}
@@ -47,7 +47,7 @@ export function RepositoryCard({
         <motion.img
           src={repo.socialImage}
           alt={repo.name}
-          className="w-14 h-14 rounded-lg object-cover border border-slate-200"
+          className="w-14 h-14 rounded-lg object-cover border border-border"
           loading="lazy"
           onError={e => {
             (e.target as HTMLImageElement).src =
@@ -55,49 +55,49 @@ export function RepositoryCard({
           }}
         />
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-slate-900 truncate mb-1">
+          <h3 className="text-base font-bold text-foreground truncate mb-1">
             {repo.name}
           </h3>
-          <p className="text-sm text-slate-600 line-clamp-2">
+          <p className="text-sm text-muted-foreground line-clamp-2">
             {repo.description || "No description available"}
           </p>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-slate-100">
+      <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <Eye className="w-4 h-4 text-blue-500" />
+          <Eye className="w-4 h-4 text-primary" />
           <div>
-            <div className="text-xs text-slate-500">Views</div>
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-xs text-muted-foreground">Views</div>
+            <div className="text-sm font-semibold text-foreground">
               {repo.views ?? 0}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-blue-400" />
+          <TrendingUp className="w-4 h-4 text-chart-1" />
           <div>
-            <div className="text-xs text-slate-500">Clones</div>
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-xs text-muted-foreground">Clones</div>
+            <div className="text-sm font-semibold text-foreground">
               {repo.clones ?? 0}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-green-500" />
+          <Star className="w-4 h-4 text-chart-2" />
           <div>
-            <div className="text-xs text-slate-500">Stars</div>
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-xs text-muted-foreground">Stars</div>
+            <div className="text-sm font-semibold text-foreground">
               {repo.stars}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <GitFork className="w-4 h-4 text-slate-400" />
+          <GitFork className="w-4 h-4 text-chart-3" />
           <div>
-            <div className="text-xs text-slate-500">Forks</div>
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-xs text-muted-foreground">Forks</div>
+            <div className="text-sm font-semibold text-foreground">
               {repo.forks}
             </div>
           </div>
@@ -106,8 +106,8 @@ export function RepositoryCard({
 
       {/* Traffic Data Unavailable Warning */}
       {repo.trafficDataUnavailable && (
-        <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-xs text-amber-700">
+        <div className="mb-4 p-2 bg-muted border border-border rounded-lg">
+          <p className="text-xs text-muted-foreground">
             Traffic data unavailable - requires push access
           </p>
         </div>
@@ -117,17 +117,17 @@ export function RepositoryCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1">
-            <GitPullRequest className="w-3.5 h-3.5 text-purple-500" />
-            <span className="text-slate-600">{repo.totalPulls ?? 0}</span>
+            <GitPullRequest className="w-3.5 h-3.5 text-chart-4" />
+            <span className="text-muted-foreground">{repo.totalPulls ?? 0}</span>
           </div>
           <div className="flex items-center gap-1">
-            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-            <span className="text-slate-600">{repo.totalIssues ?? 0}</span>
+            <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+            <span className="text-muted-foreground">{repo.totalIssues ?? 0}</span>
           </div>
         </div>
         {repo.language && (
           <div className="ml-auto">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium">
               {repo.language}
             </span>
           </div>
