@@ -3,13 +3,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useState } from "react";
-import { ThemeSelector } from "@/components/ThemeSelector";
 import Dashboard from "./pages/Dashboard";
 import TokenInput from "./pages/TokenInput";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { getPKCEParams, clearPKCEParams, validateState } from "./utils/pkce";
+import { handleOAuthCallback, getPKCEParams, clearPKCEParams, validateState } from "./utils/auth-consolidated";
 
 function App() {
   const [token, setToken] = useState<string>("");
@@ -23,66 +22,19 @@ function App() {
 
     if (code && state) {
       // Handle PKCE callback - exchange code for token
-      const pkceParams = getPKCEParams();
-      
-      if (!pkceParams.codeVerifier || !validateState(state)) {
-        toast.error('Invalid OAuth state. Please try logging in again.');
-        clearPKCEParams();
-        return;
-      }
-
-      // Exchange authorization code for access token
-      fetch('/api/auth/exchange-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: code,
-          code_verifier: pkceParams.codeVerifier,
-          state: state,
-        }),
-      })
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(err => {
-              throw new Error(err.error || 'Token exchange failed');
-            });
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.access_token) {
-            // Validate the token by making a test API call
-            return fetch('https://api.github.com/user', {
-              headers: {
-                Authorization: `Bearer ${data.access_token}`,
-                Accept: 'application/vnd.github.v3+json'
-              }
-            }).then(apiResponse => {
-              if (apiResponse.ok) {
-                // Set the token and notify user
-                setToken(data.access_token);
-                toast.success('Successfully authenticated with GitHub!');
-                clearPKCEParams();
-                // Clear URL parameters
-                window.history.replaceState({}, document.title, window.location.pathname);
-              } else {
-                console.error('[OAuth] Token validation failed:', apiResponse.status);
-                toast.error('GitHub authentication failed. Token is invalid.');
-                clearPKCEParams();
-              }
-            });
-          } else {
-            throw new Error('No access token received');
-          }
+      handleOAuthCallback(urlParams)
+        .then(({ token, username }) => {
+          setToken(token);
+          setUsername(username);
+          toast.success('Successfully authenticated with GitHub!');
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
         })
         .catch(error => {
-          console.error('[OAuth] Token exchange error:', error);
+          console.error('[OAuth] OAuth callback error:', error);
           toast.error(`GitHub authentication failed: ${error.message}`);
-          clearPKCEParams();
         });
-}
+    }
   }, []);
 
   const handleTokenSubmit = (

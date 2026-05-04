@@ -69,6 +69,9 @@ export function getPKCEParams(): { codeVerifier: string | null; state: string | 
   };
 }
 
+// Export pkceParams alias for compatibility
+export const pkceParams = getPKCEParams;
+
 /**
  * Clears PKCE parameters from session storage
  */
