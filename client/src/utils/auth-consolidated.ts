@@ -3,7 +3,7 @@
  * Streamlined PKCE-based GitHub authentication
  */
 
-import { generateCodeVerifier, generateCodeChallenge, storePKCEParams, clearPKCEParams, validateState } from './pkce';
+import { generateCodeVerifier, generateCodeChallenge, storePKCEParams, clearPKCEParams, validateState, getPKCEParams } from './pkce';
 
 // Known OAuth error types with user-friendly messages
 const OAUTH_ERROR_MESSAGES = {
@@ -185,9 +185,9 @@ export async function handleOAuthCallback(urlParams: URLSearchParams): Promise<{
 
   try {
     // Retrieve stored PKCE parameters
-    const pkceParams = getPKCEParams();
+    const storedParams = getPKCEParams();
     
-    if (!pkceParams.codeVerifier || !validateState(state)) {
+    if (!storedParams.codeVerifier || !validateState(state)) {
       throw new Error('Invalid OAuth state or missing PKCE parameters');
     }
 
@@ -199,7 +199,7 @@ export async function handleOAuthCallback(urlParams: URLSearchParams): Promise<{
       },
       body: JSON.stringify({
         code,
-        code_verifier: pkceParams.codeVerifier,
+        code_verifier: storedParams.codeVerifier,
         state,
       }),
     });
@@ -279,5 +279,6 @@ export {
   storePKCEParams,
   clearPKCEParams,
   validateState,
+  getPKCEParams,
   pkceParams,
 } from './pkce';

@@ -3,7 +3,7 @@
  * Single, consistent, and secure PKCE-based GitHub authentication
  */
 
-import { initiateGitHubLogin } from '@/utils/oauth';
+import { initiateGitHubLogin } from '@/utils/auth-consolidated';
 import { getPKCEParams, clearPKCEParams, validateState } from '@/utils/pkce';
 
 export interface OAuthConfig {
@@ -32,10 +32,13 @@ export class OAuthService {
 
   private constructor() {
     // Singleton pattern
-    if (OAuthService.instance) {
-      return OAuthService.instance;
+  }
+
+  public static getInstance(): OAuthService {
+    if (!OAuthService.instance) {
+      OAuthService.instance = new OAuthService();
     }
-    OAuthService.instance = this;
+    return OAuthService.instance;
   }
 
   /**
@@ -294,4 +297,4 @@ export class OAuthService {
 }
 
 // Export singleton instance
-export const authService = new OAuthService();
+export const authService = OAuthService.getInstance();

@@ -4,11 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
-import TokenInput from "./pages/TokenInput";
+// TokenInput component removed - OAuth consolidated
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { handleOAuthCallback, getPKCEParams, clearPKCEParams, validateState } from "./utils/auth-consolidated";
+import { handleOAuthCallback } from "./utils/auth-consolidated";
 
 function App() {
   const [token, setToken] = useState<string>("");
@@ -56,7 +56,30 @@ function App() {
         <TooltipProvider>
           <Toaster />
           {!(token || username) ? (
-            <TokenInput onSubmit={handleTokenSubmit} />
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
+              <div className="max-w-md w-full text-center">
+                <h1 className="text-2xl font-bold text-foreground mb-4">
+                  GitHub Stats Dashboard
+                </h1>
+                <p className="text-muted-foreground mb-6">
+                  OAuth authentication is being consolidated. Please use a token or username for now.
+                </p>
+                <div className="space-y-4">
+                  <input
+                    type="password"
+                    placeholder="Enter GitHub token"
+                    className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+                    onChange={(e) => handleTokenSubmit(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Enter GitHub username"
+                    className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
+                    onChange={(e) => handleTokenSubmit("", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           ) : (
             <Dashboard
               token={token}
