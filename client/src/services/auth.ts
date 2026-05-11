@@ -1,15 +1,10 @@
 /**
- * Consolidated OAuth Service
- * Single, consistent, and secure PKCE-based GitHub authentication
+ * OAuth Service
+ * Secure PKCE-based GitHub authentication for production
  */
 
 import { initiateGitHubLogin } from '@/utils/auth-consolidated';
 import { getPKCEParams, clearPKCEParams, validateState } from '@/utils/pkce';
-
-export interface OAuthConfig {
-  clientId: string;
-  redirectUri: string;
-}
 
 export interface AuthState {
   isAuthenticated: boolean;
@@ -21,7 +16,6 @@ export interface AuthState {
 
 export class OAuthService {
   private static instance: OAuthService;
-  private config: OAuthConfig | null = null;
   private state: AuthState = {
     isAuthenticated: false,
     isLoading: false,
@@ -39,17 +33,6 @@ export class OAuthService {
       OAuthService.instance = new OAuthService();
     }
     return OAuthService.instance;
-  }
-
-  /**
-   * Initialize OAuth service with configuration
-   */
-  public initialize(config: OAuthConfig): void {
-    this.config = config;
-    console.log('OAuth service initialized with config:', {
-      clientId: config.clientId,
-      redirectUri: config.redirectUri,
-    });
   }
 
   /**
@@ -92,7 +75,6 @@ export class OAuthService {
       username: null,
     };
     clearPKCEParams();
-    console.log('Authentication state cleared');
   }
 
   /**
@@ -194,10 +176,6 @@ export class OAuthService {
       };
 
       clearPKCEParams();
-      console.log('OAuth authentication successful:', {
-        username: userData.login,
-        token: data.access_token?.substring(0, 10) + '...',
-      });
 
     } catch (error) {
       this.state = {
@@ -223,7 +201,6 @@ export class OAuthService {
 
       await initiateGitHubLogin();
       
-      // Login initiated successfully
       this.state = {
         ...this.state,
         isLoading: false,
@@ -236,61 +213,6 @@ export class OAuthService {
         error: error instanceof Error ? error.message : 'Login failed',
       };
       console.error('Login initiation error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle manual token input
-   */
-  public async handleTokenInput(token: string): Promise<void> {
-    try {
-      this.state = {
-        ...this.state,
-        isLoading: true,
-        error: null,
-      };
-
-      // Validate token with GitHub API
-      const response = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!response.ok) {
-        this.state = {
-          ...this.state,
-          isLoading: false,
-          error: 'Invalid token',
-        };
-        return;
-      }
-
-      const userData = await response.json();
-
-      // Success - update state
-      this.state = {
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        token: token,
-        username: userData.login,
-      };
-
-      console.log('Token authentication successful:', {
-        username: userData.login,
-        token: token.substring(0, 10) + '...',
-      });
-
-    } catch (error) {
-      this.state = {
-        ...this.state,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Token validation failed',
-      };
-      console.error('Token validation error:', error);
       throw error;
     }
   }

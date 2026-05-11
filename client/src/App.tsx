@@ -1,48 +1,53 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
-// TokenInput component removed - OAuth consolidated
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, Github, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { handleOAuthCallback } from "./utils/auth-consolidated";
+import { handleOAuthCallback, initiateGitHubLogin } from "./utils/auth-consolidated";
 
 function App() {
   const [token, setToken] = useState<string>("");
   const [username, setUsername] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isProcessingCallback, setIsProcessingCallback] = useState<boolean>(false);
 
-// Handle PKCE OAuth callback from GitHub
+  // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.hash.substring(1) || window.location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
 
     if (code && state) {
-      // Handle PKCE callback - exchange code for token
+      setIsProcessingCallback(true);
       handleOAuthCallback(urlParams)
         .then(({ token, username }) => {
           setToken(token);
           setUsername(username);
           toast.success('Successfully authenticated with GitHub!');
-          // Clear URL parameters
           window.history.replaceState({}, document.title, window.location.pathname);
         })
         .catch(error => {
           console.error('[OAuth] OAuth callback error:', error);
           toast.error(`GitHub authentication failed: ${error.message}`);
+        })
+        .finally(() => {
+          setIsProcessingCallback(false);
         });
     }
   }, []);
 
-  const handleTokenSubmit = (
-    submittedToken: string,
-    submittedUsername?: string
-  ) => {
-    setToken(submittedToken);
-    setUsername(submittedUsername || "");
+  const handleGitHubLogin = async () => {
+    setIsLoading(true);
+    try {
+      await initiateGitHubLogin();
+    } catch (error) {
+      console.error('[OAuth] Login error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub login');
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -58,26 +63,46 @@ function App() {
           {!(token || username) ? (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
               <div className="max-w-md w-full text-center">
-                <h1 className="text-2xl font-bold text-foreground mb-4">
-                  GitHub Stats Dashboard
-                </h1>
-                <p className="text-muted-foreground mb-6">
-                  OAuth authentication is being consolidated. Please use a token or username for now.
-                </p>
-                <div className="space-y-4">
-                  <input
-                    type="password"
-                    placeholder="Enter GitHub token"
-                    className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
-                    onChange={(e) => handleTokenSubmit(e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Enter GitHub username"
-                    className="w-full p-3 border border-border rounded-lg bg-background text-foreground"
-                    onChange={(e) => handleTokenSubmit("", e.target.value)}
-                  />
+                <div className="mb-8">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                    <Github className="w-8 h-8 text-primary" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-foreground mb-2">
+                    GitHub Stats Dashboard
+                  </h1>
+                  <p className="text-muted-foreground">
+                    View and analyze your GitHub repository statistics
+                  </p>
                 </div>
+
+                {isProcessingCallback ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Completing authentication...</p>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleGitHubLogin}
+                    disabled={isLoading}
+                    className="w-full bg-[#24292f] hover:bg-[#24292f]/90 text-white py-6 text-lg font-medium"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Redirecting to GitHub...
+                      </>
+                    ) : (
+                      <>
+                        <Github className="w-5 h-5 mr-2" />
+                        Sign in with GitHub
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                <p className="text-xs text-muted-foreground mt-6">
+                  Secure authentication via GitHub OAuth with PKCE
+                </p>
               </div>
             </div>
           ) : (
