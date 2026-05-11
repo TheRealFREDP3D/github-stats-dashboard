@@ -1,6 +1,6 @@
-# GitHub App Setup Guide
+# GitHub OAuth Setup Guide
 
-This project uses GitHub App web application flow for GitHub authentication. This guide walks you through setting up a GitHub App and configuring it with your Netlify deployment.
+This project uses GitHub OAuth with PKCE (Proof Key for Code Exchange) for secure authentication. This guide walks you through setting up a GitHub OAuth App and configuring it with your Netlify deployment.
 
 ## Prerequisites
 
@@ -8,23 +8,18 @@ This project uses GitHub App web application flow for GitHub authentication. Thi
 - A Netlify account
 - Admin access to the Netlify project
 
-## Step 1: Register GitHub App
+## Step 1: Create GitHub OAuth App
 
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Click "GitHub Apps" in the left sidebar
-3. Click "New GitHub App"
-4. Fill in the application details:
-   - **GitHub App name**: QuickHubPulse (or your preferred name)
+1. Go to [GitHub OAuth Applications](https://github.com/settings/applications/new)
+2. Fill in the application details:
+   - **Application name**: QuickHubPulse (or your preferred name)
    - **Homepage URL**: Your Netlify site URL (e.g., `https://quickhubpulse.netlify.app`)
    - **Application description**: Optional
-   - **Callback URL**: `https://your-site.netlify.app/auth/github/callback`
-5. Under "Webhook", uncheck "Active" (not needed for OAuth)
-6. Under "Account permissions", select the permissions you need:
-   - For repository stats: `Contents: Read` or `Contents: Read and write`
-   - For user info: `Account information: Read`
-7. Click "Create GitHub App"
-8. Copy the **Client ID** from the app settings page
-9. Generate a **Client Secret** and copy it (you won't be able to see it again)
+   - **Authorization callback URL**: Your Netlify site URL (e.g., `https://quickhubpulse.netlify.app`)
+     > **Important**: The callback URL should be the ROOT of your site, not a specific path. The PKCE flow handles the callback at the root.
+3. Click "Register application"
+4. Copy the **Client ID**
+5. Click "Generate a new client secret" and copy the **Client Secret** (you won't be able to see it again)
 
 ## Step 2: Configure Netlify Environment Variables
 
@@ -33,78 +28,76 @@ This project uses GitHub App web application flow for GitHub authentication. Thi
 3. Add the following environment variables:
    - `GITHUB_CLIENT_ID`: The Client ID from Step 1
    - `GITHUB_CLIENT_SECRET`: The Client Secret from Step 1
-   - `GITHUB_REDIRECT_URI`: `https://your-site.netlify.app/auth/github/callback` (optional, will default to this)
+
+> **Note**: The redirect URI is automatically set to your Netlify site URL (provided by Netlify's `URL` environment variable), so you don't need to configure it separately.
 
 ## Step 3: Deploy and Test
 
 1. Deploy your changes to Netlify
 2. Navigate to your site
-3. Click "Login with GitHub"
+3. Click "Sign in with GitHub"
 4. You should be redirected to GitHub's authorization page
 5. Authorize the app
-6. You should be redirected back to your site with an access token
+6. You should be redirected back to your site and automatically logged in
 
-## How It Works
+## How the PKCE Flow Works
 
-1. User clicks "Login with GitHub"
-2. Netlify function generates GitHub authorization URL
-3. User is redirected to GitHub to authorize the app
-4. GitHub redirects to your callback URL with an authorization code
-5. Netlify function exchanges the code for an access token
-6. User is redirected back to your app with the access token
-7. Your app can use the token to make authenticated GitHub API requests
-
-## Token Handling
-
-The access token is returned via URL parameters after successful authentication:
-- Extract token from URL: `?oauth=success&access_token=...`
-- Store token securely in memory or secure storage
-- Use token for GitHub API calls: `Authorization: Bearer <token>`
+1. User clicks "Sign in with GitHub"
+2. Client generates a cryptographic `code_verifier` and `code_challenge` (SHA-256 hash)
+3. Client requests authorization URL from Netlify function with `code_challenge`
+4. Netlify function builds GitHub OAuth URL with PKCE parameters
+5. User is redirected to GitHub to authorize the app
+6. GitHub redirects back to your site with an authorization `code`
+7. Client sends `code` and `code_verifier` to Netlify function
+8. Netlify function exchanges the code + verifier for an access token
+9. Access token is returned to the client for authenticated API calls
 
 ## OAuth Scopes
 
-Current scopes configured in `netlify/functions/github-login-url.ts`:
-- `repo`: Full control of private and public repositories
+Current scopes configured:
+- `repo`: Access to public and private repositories
 - `user`: Access user profile data
 
-You can modify these scopes based on your application needs. See [GitHub App Scopes](https://docs.github.com/en/apps/creating-github-apps/setting-up-a-github-app/setting-permissions-for-github-apps) for more information.
+You can modify these scopes in `netlify/functions/github-login-url.ts` based on your application needs.
 
 ## Troubleshooting
 
-### "GitHub App configuration error"
+### "GitHub OAuth not configured"
 
 - Ensure `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are set in Netlify environment variables
-- Verify the GitHub App is properly registered
-- Check that the Client ID matches your GitHub App
+- Redeploy the site after adding environment variables
 
 ### "GitHub access was denied"
 
 - User may have denied authorization
-- Check that the GitHub App permissions match what the user expects
-- Verify the callback URL matches exactly
+- Try authorizing again
 
 ### "Redirect URI mismatch"
 
-- Ensure the callback URL in GitHub App settings matches your Netlify site URL exactly
-- Check that `GITHUB_REDIRECT_URI` environment variable is set correctly (if using custom URL)
+- Ensure the Authorization callback URL in GitHub OAuth App settings matches your Netlify site URL exactly
+- The URL should be the root (e.g., `https://your-site.netlify.app`), not a subpath
+
+### "Invalid OAuth state"
+
+- The PKCE state validation failed
+- This can happen if the browser session was cleared mid-flow
+- Try signing in again
 
 ### Network errors
 
 - Check your internet connection
-- Verify Netlify functions are deployed correctly
-- Check Netlify function logs for errors
+- Check Netlify function logs for errors in the Netlify dashboard
 
 ## Security Best Practices
 
 - **Never commit credentials** to version control
 - **Use environment variables** for all secrets
-- **Rotate secrets regularly** in GitHub App settings
-- **Monitor GitHub App usage** in GitHub dashboard
-- **Use minimal scopes** required for your application
-- **Revoke access** when no longer needed
+- **PKCE flow** protects against authorization code interception attacks
+- **Rotate secrets regularly** in GitHub OAuth App settings
+- **Monitor OAuth App usage** in GitHub dashboard
 
 ## Documentation
 
-- [Building a "Login with GitHub" button with a GitHub App](https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/building-a-login-with-github-button-with-a-github-app)
-- [GitHub App Scopes](https://docs.github.com/en/apps/creating-github-apps/setting-up-a-github-app/setting-permissions-for-github-apps)
+- [GitHub OAuth Apps](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps)
+- [PKCE RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)
 - [OAuth Security Implementation](./oauth-security.md)

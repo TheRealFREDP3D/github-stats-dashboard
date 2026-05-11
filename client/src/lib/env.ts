@@ -121,32 +121,6 @@ export const env = {
     return parseString(import.meta.env.VITE_ANALYTICS_WEBSITE_ID, "");
   },
 
-  // Development Configuration
-  get HMR_ENABLED(): boolean {
-    return parseBoolean(import.meta.env.VITE_HMR_ENABLED, true);
-  },
-
-  get HMR_HOST(): string {
-    return parseString(import.meta.env.VITE_HMR_HOST, "localhost");
-  },
-
-  get HMR_PORT(): number {
-    return parseNumber(import.meta.env.VITE_HMR_PORT, 5173);
-  },
-
-  // Security Configuration
-  get CORS_ORIGINS(): string[] {
-    const origins = parseString(
-      import.meta.env.VITE_CORS_ORIGINS,
-      "http://localhost:3000,http://localhost:5173"
-    );
-    return origins.split(",").map(o => o.trim());
-  },
-
-  get CSP_ENABLED(): boolean {
-    return parseBoolean(import.meta.env.VITE_CSP_ENABLED, true);
-  },
-
   // Logging Configuration
   get LOG_LEVEL(): "error" | "warn" | "info" | "debug" | "trace" {
     const level = parseString(import.meta.env.VITE_LOG_LEVEL, "info");
@@ -209,15 +183,6 @@ export const env = {
 
   get SOURCEMAP(): boolean {
     return parseBoolean(import.meta.env.VITE_SOURCEMAP, false);
-  },
-
-  // OAuth Configuration
-  get OAUTH_PORTAL_URL(): string {
-    return parseString(import.meta.env.VITE_OAUTH_PORTAL_URL, "");
-  },
-
-  get APP_ID(): string {
-    return parseString(import.meta.env.VITE_APP_ID, "");
   },
 } as const;
 
@@ -321,17 +286,6 @@ export function validateEnvironment(): void {
     logger.warn("Invalid API_RATE_LIMIT, using default");
   }
 
-  // Validate OAuth configuration
-  if (!env.OAUTH_PORTAL_URL) {
-    logger.warn("OAuth portal URL not configured - OAuth login will not work");
-  } else if (!env.OAUTH_PORTAL_URL.startsWith("http")) {
-    logger.warn("Invalid OAUTH_PORTAL_URL format");
-  }
-
-  if (!env.APP_ID) {
-    logger.warn("OAuth app ID not configured - OAuth login will not work");
-  }
-
   logger.info("Environment validation completed");
 }
 
@@ -354,11 +308,6 @@ export function getEnvironmentSnapshot(): Record<string, unknown> {
     ENABLE_ANALYTICS: env.ENABLE_ANALYTICS,
     ANALYTICS_ENDPOINT: env.ANALYTICS_ENDPOINT,
     ANALYTICS_WEBSITE_ID: env.ANALYTICS_WEBSITE_ID,
-    HMR_ENABLED: env.HMR_ENABLED,
-    HMR_HOST: env.HMR_HOST,
-    HMR_PORT: env.HMR_PORT,
-    CORS_ORIGINS: env.CORS_ORIGINS,
-    CSP_ENABLED: env.CSP_ENABLED,
     LOG_LEVEL: env.LOG_LEVEL,
     CONSOLE_LOG: env.CONSOLE_LOG,
     ENABLE_SEARCH: env.ENABLE_SEARCH,
@@ -372,7 +321,5 @@ export function getEnvironmentSnapshot(): Record<string, unknown> {
     CACHE_REPOS: env.CACHE_REPOS,
     BUILD_DIR: env.BUILD_DIR,
     SOURCEMAP: env.SOURCEMAP,
-    OAUTH_PORTAL_URL: env.OAUTH_PORTAL_URL,
-    APP_ID: env.APP_ID,
   };
 }

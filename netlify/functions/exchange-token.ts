@@ -7,18 +7,33 @@ interface TokenExchangeRequest {
 }
 
 export const handler: Handler = async (event) => {
-  try {
-    // Only allow POST requests
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: 'Method not allowed' }),
-      };
-    }
+  // CORS headers for production
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': process.env.URL || '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
+
+  try {
     if (!event.body) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'Missing request body' }),
       };
     }
@@ -26,18 +41,20 @@ export const handler: Handler = async (event) => {
     let requestBody: TokenExchangeRequest;
     try {
       requestBody = JSON.parse(event.body) as TokenExchangeRequest;
-    } catch (error) {
+    } catch {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'Invalid JSON in request body' }),
       };
     }
 
-    const { code, code_verifier, state } = requestBody;
+    const { code, code_verifier } = requestBody;
 
     if (!code || !code_verifier) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ 
           error: 'Missing required parameters: code and code_verifier are required' 
         }),
@@ -48,22 +65,24 @@ export const handler: Handler = async (event) => {
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
     
     if (!clientId) {
+      console.error('GITHUB_CLIENT_ID environment variable not set');
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ 
-          error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID environment variable." 
+          error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID in Netlify environment variables." 
         }),
       };
     }
 
-    // Exchange authorization code for access token using PKCE
-    const tokenRequestBody: any = {
+    // Build token exchange request with PKCE
+    const tokenRequestBody: Record<string, string> = {
       client_id: clientId,
       code: code,
       code_verifier: code_verifier,
     };
 
-    // Add client_secret if available (optional for PKCE but recommended)
+    // Add client_secret for additional security (recommended by GitHub)
     if (clientSecret) {
       tokenRequestBody.client_secret = clientSecret;
     }
@@ -82,9 +101,9 @@ export const handler: Handler = async (event) => {
       console.error('GitHub token exchange failed:', tokenResponse.status, errorText);
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ 
-          error: 'Token exchange failed',
-          details: errorText 
+          error: 'Token exchange failed'
         }),
       };
     }
@@ -92,9 +111,10 @@ export const handler: Handler = async (event) => {
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      console.error('GitHub OAuth error:', tokenData);
+      console.error('GitHub OAuth error:', tokenData.error);
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ 
           error: tokenData.error_description || tokenData.error 
         }),
@@ -102,9 +122,10 @@ export const handler: Handler = async (event) => {
     }
 
     if (!tokenData.access_token) {
-      console.error('No access token in response:', tokenData);
+      console.error('No access token in response');
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({ error: 'No access token received' }),
       };
     }
@@ -112,9 +133,7 @@ export const handler: Handler = async (event) => {
     // Return success response with token info
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         success: true,
         access_token: tokenData.access_token,
@@ -127,6 +146,7 @@ export const handler: Handler = async (event) => {
     console.error('Token exchange error:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ 
         error: 'Internal server error during token exchange' 
       }),

@@ -1,5 +1,4 @@
 import { Handler } from '@netlify/functions';
-import crypto from 'crypto';
 
 interface PKCERequest {
   code_challenge: string;
@@ -7,103 +6,109 @@ interface PKCERequest {
 }
 
 export const handler: Handler = async (event) => {
+  // CORS headers for production
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': process.env.URL || '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  // Only allow POST for PKCE flow in production
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: "Method not allowed. Use POST with PKCE parameters." }),
+    };
+  }
+
   try {
     const clientId = process.env.GITHUB_CLIENT_ID;
     
     if (!clientId) {
+      console.error('GITHUB_CLIENT_ID environment variable not set');
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ 
-          error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID environment variable." 
+          error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID in Netlify environment variables." 
         }),
       };
     }
 
-    const redirectUri = process.env.GITHUB_REDIRECT_URI;
-    
-    if (!redirectUri) {
+    // Use the Netlify site URL for redirect in production
+    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL;
+    if (!siteUrl) {
+      console.error('URL environment variable not set');
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({
-          error: "GitHub OAuth not configured. Please set GITHUB_REDIRECT_URI environment variable for this environment (e.g. http://localhost:3000/auth/github/callback)."
+          error: "Site URL not configured. This should be automatically set by Netlify."
         }),
       };
     }
 
-    let codeChallenge: string;
-    let state: string;
+    // Redirect back to the site root with OAuth callback parameters
+    const redirectUri = siteUrl;
 
-    // Handle both GET (legacy) and POST (PKCE) requests
-    if (event.httpMethod === 'POST') {
-      // PKCE flow - client sends code_challenge and state
-      if (!event.body) {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({ error: "Missing request body for PKCE flow" }),
-        };
-      }
-
-      try {
-        const body = JSON.parse(event.body) as PKCERequest;
-        codeChallenge = body.code_challenge;
-        state = body.state;
-
-        if (!codeChallenge || !state) {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({ error: "Missing code_challenge or state in request body" }),
-          };
-        }
-      } catch (error) {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({ error: "Invalid JSON in request body" }),
-        };
-      }
-    } else {
-      // Legacy flow - generate server-side state (not recommended for production)
-      state = crypto.randomBytes(16).toString('hex');
-      codeChallenge = ''; // Not used in legacy flow
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Missing request body for PKCE flow" }),
+      };
     }
 
-    // Build OAuth URL with PKCE parameters if available
+    let body: PKCERequest;
+    try {
+      body = JSON.parse(event.body) as PKCERequest;
+    } catch {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Invalid JSON in request body" }),
+      };
+    }
+
+    const { code_challenge, state } = body;
+
+    if (!code_challenge || !state) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Missing code_challenge or state in request body" }),
+      };
+    }
+
+    // Build OAuth URL with PKCE parameters
     const authParams = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
       scope: 'repo,user',
       state: state,
+      code_challenge: code_challenge,
+      code_challenge_method: 'S256',
     });
-
-    // Add PKCE parameters if using PKCE flow
-    if (codeChallenge) {
-      authParams.append('code_challenge', codeChallenge);
-      authParams.append('code_challenge_method', 'S256');
-    }
 
     const authUrl = `https://github.com/login/oauth/authorize?${authParams.toString()}`;
     
-    const response: any = {
+    return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ url: authUrl }),
     };
-
-    // Only set state cookie for legacy flow
-    if (event.httpMethod === 'GET') {
-      response.multiValueHeaders = {
-        'Set-Cookie': [
-          `github_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
-        ],
-      };
-    }
-
-    return response;
   } catch (error) {
     console.error("Error generating OAuth URL:", error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: "Failed to generate OAuth URL" }),
     };
   }
