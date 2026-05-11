@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-05-11
+
+### Fixed
+
+- **TypeScript Errors**: Added missing `OAUTH_PORTAL_URL` and `APP_ID` environment variables to resolve build failures
+- **Environment Configuration**: Updated `.env.example` with OAuth configuration variables
+- **Build Process**: Fixed type checking errors that were preventing successful builds
+
+### Added
+
+- **Privacy Policy**: Added comprehensive privacy policy documentation for transparency and compliance
+
 ## [1.3.0] - 2026-04-20
 
 ### Added

@@ -184,6 +184,15 @@ export const env = {
   get SOURCEMAP(): boolean {
     return parseBoolean(import.meta.env.VITE_SOURCEMAP, false);
   },
+
+  // OAuth Configuration
+  get OAUTH_PORTAL_URL(): string {
+    return parseString(import.meta.env.VITE_OAUTH_PORTAL_URL, "");
+  },
+
+  get APP_ID(): string {
+    return parseString(import.meta.env.VITE_APP_ID, "");
+  },
 } as const;
 
 /**
@@ -321,5 +330,7 @@ export function getEnvironmentSnapshot(): Record<string, unknown> {
     CACHE_REPOS: env.CACHE_REPOS,
     BUILD_DIR: env.BUILD_DIR,
     SOURCEMAP: env.SOURCEMAP,
+    OAUTH_PORTAL_URL: env.OAUTH_PORTAL_URL,
+    APP_ID: env.APP_ID,
   };
 }
