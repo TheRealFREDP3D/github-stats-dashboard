@@ -148,12 +148,34 @@ export class OAuthService {
       }
 
       // Validate token with GitHub API
-      const userResponse = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${data.access_token}`,
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      let userResponse: Response;
+      try {
+        userResponse = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `Bearer ${data.access_token}`,
+            'Accept': 'application/vnd.github.v3+json',
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.error('[Auth] GitHub API validation timeout');
+          this.state = {
+            ...this.state,
+            isLoading: false,
+            error: 'Token validation timeout - please try again',
+          };
+          return;
+        }
+        
+        throw error;
+      }
 
       if (!userResponse.ok) {
         this.state = {

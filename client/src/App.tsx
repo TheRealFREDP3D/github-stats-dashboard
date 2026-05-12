@@ -230,30 +230,28 @@ function App() {
                     <p className="text-muted-foreground">Completing authentication...</p>
                   </div>
                 ) : (
-                  !env.DEVELOPMENT && (
-                    <Button
-                      onClick={handleGitHubLogin}
-                      disabled={isLoading}
-                      className="w-full bg-[#24292f] hover:bg-[#24292f]/90 text-white py-6 text-lg font-medium"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Redirecting to GitHub...
-                        </>
-                      ) : (
-                        <>
-                          <Github className="w-5 h-5 mr-2" />
-                          Sign in with GitHub
-                        </>
-                      )}
-                    </Button>
-                  )
+                  <Button
+                    onClick={handleGitHubLogin}
+                    disabled={isLoading}
+                    className="w-full bg-[#24292f] hover:bg-[#24292f]/90 text-white py-6 text-lg font-medium"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Redirecting to GitHub...
+                      </>
+                    ) : (
+                      <>
+                        <Github className="w-5 h-5 mr-2" />
+                        Sign in with GitHub
+                      </>
+                    )}
+                  </Button>
                 )}
 
                 <p className="text-xs text-muted-foreground mt-6">
                   {env.DEVELOPMENT 
-                    ? "Development Mode: Use Personal Access Token authentication above"
+                    ? "Development Mode: Use Personal Access Token authentication above or OAuth below"
                     : "Secure authentication via GitHub OAuth with PKCE"
                   }
                 </p>

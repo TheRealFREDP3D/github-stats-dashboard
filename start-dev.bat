@@ -40,10 +40,10 @@ if not exist vite-output.txt (
 :detect_port
 REM Check which port Vite is using and update .env
 echo 📍 Detecting Vite port...
-for /f "tokens=3 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
-    echo 🚨 Vite started on port: %%b
+for /f "tokens=5 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
+    echo 🚨 Vite started on port: %%a
     echo Updating VITE_DEV_PORT in .env...
-    powershell -Command "(Get-Content .env) -replace 'VITE_DEV_PORT=.*', 'VITE_DEV_PORT=%%b' | Set-Content .env"
+    powershell -Command "if ((Get-Content .env) -match 'VITE_DEV_PORT=') { (Get-Content .env) -replace 'VITE_DEV_PORT=.*', 'VITE_DEV_PORT=%%a' | Set-Content .env } else { Add-Content .env 'VITE_DEV_PORT=%%a' }"
 )
 
 REM Clean up
@@ -53,9 +53,9 @@ REM Wait a bit more for server to be fully ready
 timeout /t 2 /nobreak >nul
 
 REM Extract port from vite-output and open browser
-for /f "tokens=3 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
-    echo 🌐 Opening browser on port: %%b
-    start http://localhost:%%b
+for /f "tokens=5 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
+    echo 🌐 Opening browser on port: %%a
+    start http://localhost:%%a
 )
 
 pause
