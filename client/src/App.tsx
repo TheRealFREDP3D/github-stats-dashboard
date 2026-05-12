@@ -4,18 +4,38 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Github, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, RefreshCw, Github, Loader2, Key, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { handleOAuthCallback, initiateGitHubLogin } from "./utils/auth-consolidated";
+import { 
+  authenticateWithToken, 
+  attemptDevAuth, 
+  isValidTokenFormat, 
+  storeDevToken, 
+  getStoredDevToken, 
+  clearDevToken,
+  isDevModeAvailable 
+} from "./utils/dev-auth";
+import { env } from "./lib/env";
 
 function App() {
   const [token, setToken] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isProcessingCallback, setIsProcessingCallback] = useState<boolean>(false);
+  const [devToken, setDevToken] = useState<string>("");
+  const [devAuthError, setDevAuthError] = useState<string>("");
+  const [useDevMode, setUseDevMode] = useState<boolean>(false);
 
   // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
+    // Skip OAuth callback handling in development mode
+    if (useDevMode) {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
@@ -37,6 +57,26 @@ function App() {
           setIsProcessingCallback(false);
         });
     }
+  }, [useDevMode]);
+
+  // Attempt development mode authentication on mount
+  useEffect(() => {
+    if (env.DEVELOPMENT && isDevModeAvailable()) {
+      attemptDevAuth().then(result => {
+        if (result.isAuthenticated && result.token && result.username) {
+          setToken(result.token);
+          setUsername(result.username);
+          setUseDevMode(true);
+          toast.success('Authenticated using development token!');
+        }
+      });
+    } else if (env.DEVELOPMENT) {
+      // Check for stored token in session
+      const storedToken = getStoredDevToken();
+      if (storedToken) {
+        setDevToken(storedToken);
+      }
+    }
   }, []);
 
   const handleGitHubLogin = async () => {
@@ -50,9 +90,116 @@ function App() {
     }
   };
 
+  const handleDevTokenAuth = async () => {
+    if (!devToken.trim()) {
+      setDevAuthError('Please enter a token');
+      return;
+    }
+
+    if (!isValidTokenFormat(devToken)) {
+      setDevAuthError('Invalid token format. GitHub Personal Access Tokens are typically 40+ characters long.');
+      return;
+    }
+
+    setIsLoading(true);
+    setDevAuthError('');
+
+    try {
+      const result = await authenticateWithToken(devToken);
+      
+      if (result.isAuthenticated && result.token && result.username) {
+        setToken(result.token);
+        setUsername(result.username);
+        setUseDevMode(true);
+        storeDevToken(devToken);
+        toast.success('Successfully authenticated with Personal Access Token!');
+      } else {
+        setDevAuthError(result.error || 'Authentication failed');
+      }
+    } catch (error) {
+      setDevAuthError(error instanceof Error ? error.message : 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     setToken("");
     setUsername("");
+    setDevToken("");
+    setDevAuthError("");
+    setUseDevMode(false);
+    clearDevToken();
+  };
+
+  // Render development mode UI
+  const renderDevAuth = () => {
+    if (!env.DEVELOPMENT) {
+      return null;
+    }
+
+    return (
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex items-center gap-2 mb-3">
+          <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <h3 className="font-medium text-blue-900 dark:text-blue-100">Development Mode</h3>
+        </div>
+        
+        <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
+          Use a GitHub Personal Access Token instead of OAuth for development.
+        </p>
+
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              placeholder="Enter GitHub Personal Access Token"
+              value={devToken}
+              onChange={(e) => {
+                setDevToken(e.target.value);
+                setDevAuthError('');
+              }}
+              className="flex-1"
+              disabled={isLoading}
+            />
+            <Button
+              onClick={handleDevTokenAuth}
+              disabled={isLoading || !devToken.trim()}
+              variant="outline"
+              size="sm"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Key className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+
+          {devAuthError && (
+            <Alert variant="destructive" className="py-2">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription className="text-sm">
+                {devAuthError}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="text-xs text-blue-700 dark:text-blue-300">
+            <p className="mb-1">Create a token at: </p>
+            <a 
+              href="https://github.com/settings/tokens" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline hover:no-underline"
+            >
+              github.com/settings/tokens
+            </a>
+            <p className="mt-1">Required scopes: public_repo, read:user</p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -74,6 +221,8 @@ function App() {
                     View and analyze your GitHub repository statistics
                   </p>
                 </div>
+
+                {renderDevAuth()}
 
                 {isProcessingCallback ? (
                   <div className="flex flex-col items-center gap-4">
@@ -101,7 +250,10 @@ function App() {
                 )}
 
                 <p className="text-xs text-muted-foreground mt-6">
-                  Secure authentication via GitHub OAuth with PKCE
+                  {env.DEVELOPMENT 
+                    ? "Development Mode: Use Personal Access Token authentication above or OAuth below"
+                    : "Secure authentication via GitHub OAuth with PKCE"
+                  }
                 </p>
               </div>
             </div>

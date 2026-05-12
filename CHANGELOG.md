@@ -23,7 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **GitHub App Web Application Flow**: Migrated authentication to GitHub App web application flow for improved OAuth handling
 - **Netlify Managed GitHub OAuth**: Integrated Netlify managed GitHub OAuth for seamless authentication
-- **Google Tag Manager**: Integrated Google Tag Manager for analytics tracking
 
 ### Changed
 
