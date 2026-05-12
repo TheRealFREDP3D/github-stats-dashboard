@@ -19,7 +19,7 @@ A streamlined, modern dashboard for quick repository overview with detailed insi
 
 Simply use the "Log with Github" button to authenticate.
 
-![Enter your PAT](image/authentification-Oauth.png)
+![Enter your PAT](image/authentication-oauth.png)
 
 ### Repository Dashboard
 
