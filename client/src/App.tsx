@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Github, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { handleOAuthCallback, initiateGitHubLogin } from "./utils/auth-consolidated";
+import { env } from "@/lib/env";
 
 function App() {
   const [token, setToken] = useState<string>("");
@@ -179,7 +180,7 @@ class ErrorBoundary extends React.Component<
               </Button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {env.DEVELOPMENT && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
                   Error Details (Development)

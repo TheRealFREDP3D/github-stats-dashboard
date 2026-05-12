@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ErrorCode, createGitHubError, getErrorCodeFromStatus, GitHubError } from "@/errors";
+import { apiCache, cachedFetch, CacheKeys, CacheTTL } from "@/utils/api-cache";
 
 export interface Repository {
   id: number;
@@ -124,8 +125,8 @@ export function useGitHubAPI(
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<ErrorCode | null>(null);
 
-  const fetchWithAuth = async (url: string) => {
-    const response = await fetch(url, { headers: buildHeaders(token) });
+  const fetchWithAuth = async (url: string, cacheKey?: string, ttl?: number) => {
+    const response = await cachedFetch(url, { headers: buildHeaders(token) }, cacheKey, ttl);
     if (!response.ok) {
       console.error(`[GitHub API] Error fetching ${url}:`, response.status, response.statusText);
       const errorCode = getErrorCodeFromStatus(response.status, !!token);
@@ -170,11 +171,19 @@ export function useGitHubAPI(
   };
 
   const fetchDetailedStats = async (repo: Repository): Promise<Repository> => {
-    const cacheKey = `${repo.owner}/${repo.name}`;
+    const cacheKey = CacheKeys.repoStats(repo.owner, repo.name);
 
     // Check cache first
-    if (statsCache.has(cacheKey)) {
-      return statsCache.get(cacheKey)!;
+    const cached = apiCache.get<Repository>(cacheKey);
+    if (cached) {
+      console.log(`[GitHub API] Using cached stats for ${repo.owner}/${repo.name}`);
+      // Update the repository in the main list with cached data
+      setRepositories(prevRepos => 
+        prevRepos.map(r => 
+          r.id === repo.id ? { ...r, ...cached } : r
+        )
+      );
+      return cached;
     }
 
     return statsLimiter.execute(async () => {
@@ -218,8 +227,8 @@ export function useGitHubAPI(
           trafficDataUnavailable: unavailable,
         };
 
-        // Cache the result
-        statsCache.set(cacheKey, detailedRepo);
+        // Cache the result with longer TTL for stats
+        apiCache.set(cacheKey, detailedRepo, CacheTTL.REPO_STATS);
 
         // Update the repository in the main list
         setRepositories(prevRepos => 
@@ -250,9 +259,15 @@ export function useGitHubAPI(
     let viewsUnavailable = false;
     let clonesUnavailable = false;
 
+    const viewsCacheKey = CacheKeys.repoTraffic(repo.owner, repo.name, 'views');
+    const clonesCacheKey = CacheKeys.repoTraffic(repo.owner, repo.name, 'clones');
+
     const [views, clones] = await Promise.all([
+      // Use cached fetch for traffic data with longer TTL
       fetchWithAuth(
-        `${GITHUB_API_BASE}/repos/${repo.owner}/${repo.name}/traffic/views`
+        `${GITHUB_API_BASE}/repos/${repo.owner}/${repo.name}/traffic/views`,
+        viewsCacheKey,
+        CacheTTL.TRAFFIC_DATA
       )
         .then(data => data)
         .catch((error) => {
@@ -261,7 +276,9 @@ export function useGitHubAPI(
           return defaultViews;
         }),
       fetchWithAuth(
-        `${GITHUB_API_BASE}/repos/${repo.owner}/${repo.name}/traffic/clones`
+        `${GITHUB_API_BASE}/repos/${repo.owner}/${repo.name}/traffic/clones`,
+        clonesCacheKey,
+        CacheTTL.TRAFFIC_DATA
       )
         .then(data => data)
         .catch((error) => {
@@ -299,7 +316,8 @@ export function useGitHubAPI(
       setError(null);
 
       const reposUrl = buildReposUrl(token, username);
-      const repos = await fetchWithAuth(reposUrl);
+      const cacheKey = username ? CacheKeys.userRepos(username) : `repos:token:${token.slice(-8)}`;
+      const repos = await fetchWithAuth(reposUrl, cacheKey, CacheTTL.REPO_BASIC);
 
       // Return basic repository data without expensive stats
       const basicRepos: Repository[] = repos.map((repo: any) => ({

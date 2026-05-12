@@ -2,7 +2,6 @@
 
 ![Header](image/header.jpg)
 
-
 ![GitHub License](https://img.shields.io/github/license/TheRealFREDP3D/QuickHubPulse)
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/TheRealFREDP3D/QuickHubPulse)
 ![GitHub Last Commit](https://img.shields.io/github/last-commit/TheRealFREDP3D/QuickHubPulse)
@@ -16,20 +15,23 @@ A streamlined, modern dashboard for quick repository overview with detailed insi
 
 ## Screenshots
 
-### Token Authentication
+### Easy Authentication
+
 Enter your GitHub Personal Access Token to get started:
 
-![Enter your PAT](image/enter-token.png)
+![Authentication](image/authentication-oauth.png)
 
 ### Repository Dashboard
+
 View all your repositories in a responsive grid layout with key metrics:
 
-![Repositories Grid](image/dashboard.png)
+![Dashboard - Dark Theme](image/dashboard_github_dark.png)
 
 ### Detailed Statistics
+
 Click any repository card to see comprehensive statistics and traffic trends:
 
-![Detailed Statistics](image/detais.png)
+![Detailed View](image/detailed_view.png)
 
 ## Features
 
@@ -155,6 +157,7 @@ Custom hook managing GitHub API calls, data fetching, and state management.
 ## Technology Stack
 
 ### Frontend
+
 - **React 19**: UI framework
 - **Tailwind CSS 4**: Styling
 - **Vite**: Build tool and dev server
@@ -165,6 +168,7 @@ Custom hook managing GitHub API calls, data fetching, and state management.
 - **date-fns**: Date formatting
 
 ### Backend
+
 - **Express.js**: Minimal server for local stats persistence and OAuth
 - **Node.js**: Runtime environment
 
@@ -186,17 +190,20 @@ All API calls are made directly from the browser to GitHub. Your token is stored
 The dashboard supports three authentication methods:
 
 ### 1. Personal Access Token (Recommended)
+
 - Enter your GitHub Personal Access Token directly
 - Full access to private repositories and traffic data
 - Token is stored locally in browser storage only
 
 ### 2. Username Only
+
 - Enter any GitHub username to view public repositories
 - No authentication required
 - Limited to public repository information only
 - Traffic data and private stats are not available
 
 ### 3. GitHub OAuth (Development Setup Required)
+
 - Click "Login with GitHub" to authenticate via OAuth
 - Requires backend configuration with GitHub OAuth App
 - Currently in development - requires environment variables:
@@ -204,6 +211,7 @@ The dashboard supports three authentication methods:
   - `GITHUB_REDIRECT_URI`: OAuth callback URL (required for each environment)
 
 To set up OAuth:
+
 1. Create a GitHub OAuth App at [GitHub Settings → Developer settings → OAuth Apps](https://github.com/settings/applications/new)
 2. Set the callback URL appropriate for your environment:
    - **Development**: `http://localhost:8888/auth/github/callback`
@@ -219,21 +227,26 @@ To set up OAuth:
 The application includes a lightweight Express.js backend for local statistics persistence:
 
 ### Features
+
 - Save repository statistics locally with timestamps
 - Retrieve historical statistics
 - Get the most recent saved statistics
 - File-based storage using JSON
 
 ### API Endpoints
+
 - `POST /api/stats` - Save new repository statistics
 - `GET /api/stats` - Get all historical statistics
 - `GET /api/stats/latest` - Get the most recent statistics
 
 ### Usage
+
 The backend is automatically started when running `pnpm run dev`. Statistics can be saved manually using the "Save Stats" button in the dashboard, which stores the current repository data locally for future reference.
 
 ### Data Storage
+
 Statistics are stored in `data/repository-stats.json` in the project root. Each entry includes:
+
 - Timestamp when the statistics were saved
 - Complete repository data including metrics and traffic information
 

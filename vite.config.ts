@@ -160,6 +160,10 @@ const plugins = [
 
 export default defineConfig({
   plugins,
+  define: {
+    // Ensure development-only code is properly stripped from production
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
