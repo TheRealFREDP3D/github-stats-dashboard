@@ -43,5 +43,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Set environment to production
 ENV NODE_ENV=production
 
+# Default environment variables (can be overridden)
+ENV GITHUB_REDIRECT_URI=http://localhost:3000
+
+# Note: GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET should be provided at runtime
+# using docker run -e or docker-compose environment variables for security
+
 # Start the application
 CMD ["node", "dist/index.js"]

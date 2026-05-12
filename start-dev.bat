@@ -12,13 +12,50 @@ echo.
 
 REM Start Netlify Functions in background
 echo 🔧 Starting Netlify Functions...
-start /B cmd /c "pnpm exec netlify functions:serve --port=8991"
+start /B cmd /c "pnpm exec netlify functions:serve --port=8991" >nul 2>&1
 
 REM Wait for functions to start
 timeout /t 3 /nobreak >nul
 
+REM Clean up any existing vite-output.txt
+if exist vite-output.txt (
+    echo 🗑️ Cleaning up existing vite-output.txt...
+    del /f vite-output.txt
+)
+
 REM Start Vite dev server
 echo 🎨 Starting Vite Dev Server...
-pnpm dev
+start /B cmd /c "pnpm run dev > vite-output.txt 2>&1"
+
+REM Wait a moment for Vite to start
+timeout /t 5 /nobreak >nul
+
+REM Retry port detection if file is locked
+if not exist vite-output.txt (
+    echo ⚠️ File not ready, retrying...
+    timeout /t 2 /nobreak >nul
+    goto :detect_port
+)
+
+:detect_port
+REM Check which port Vite is using and update .env
+echo 📍 Detecting Vite port...
+for /f "tokens=3 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
+    echo 🚨 Vite started on port: %%b
+    echo Updating VITE_DEV_PORT in .env...
+    powershell -Command "(Get-Content .env) -replace 'VITE_DEV_PORT=.*', 'VITE_DEV_PORT=%%b' | Set-Content .env"
+)
+
+REM Clean up
+del vite-output.txt
+
+REM Wait a bit more for server to be fully ready
+timeout /t 2 /nobreak >nul
+
+REM Extract port from vite-output and open browser
+for /f "tokens=3 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
+    echo 🌐 Opening browser on port: %%b
+    start http://localhost:%%b
+)
 
 pause

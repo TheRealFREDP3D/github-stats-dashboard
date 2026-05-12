@@ -193,6 +193,11 @@ export const env = {
   get APP_ID(): string {
     return parseString(import.meta.env.VITE_APP_ID, "");
   },
+
+  // Development Authentication
+  get GITHUB_PERSONAL_TOKEN(): string {
+    return parseString(import.meta.env.VITE_GITHUB_PERSONAL_TOKEN, "");
+  },
 } as const;
 
 /**
@@ -332,5 +337,6 @@ export function getEnvironmentSnapshot(): Record<string, unknown> {
     SOURCEMAP: env.SOURCEMAP,
     OAUTH_PORTAL_URL: env.OAUTH_PORTAL_URL,
     APP_ID: env.APP_ID,
+    GITHUB_PERSONAL_TOKEN: env.GITHUB_PERSONAL_TOKEN ? "***" : "",
   };
 }

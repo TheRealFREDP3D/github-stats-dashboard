@@ -42,19 +42,17 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Use the Netlify site URL for redirect in production
-    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL;
-    if (!siteUrl) {
-      console.error('URL environment variable not set');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({
-          error: "Site URL not configured. This should be automatically set by Netlify."
-        }),
-      };
+    // Use the Netlify site URL for redirect in production, or fallback to development URL
+    let siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL;
+    
+    if (!siteUrl && process.env.NODE_ENV === 'development') {
+      // In development, try to detect the actual Vite port
+      const vitePort = process.env.VITE_DEV_PORT || '3000';
+      siteUrl = `http://localhost:${vitePort}`;
     }
-
+    
+    siteUrl = siteUrl || process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000';
+    
     // Redirect back to the site root with OAuth callback parameters
     const redirectUri = siteUrl;
 
