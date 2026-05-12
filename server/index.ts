@@ -37,6 +37,13 @@ async function startServer() {
         });
       }
 
+      // In production, fail hard if no valid redirect URI is available
+      if (!process.env.GITHUB_REDIRECT_URI && !process.env.BASE_URL && process.env.NODE_ENV === 'production') {
+        return res.status(500).json({ 
+          error: "OAuth redirect URL not configured. Please set GITHUB_REDIRECT_URI or BASE_URL environment variables." 
+        });
+      }
+      
       const redirectUri = process.env.GITHUB_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/auth/github/callback`;
       const state = Math.random().toString(36).substring(2, 15); // Simple state for demo
       

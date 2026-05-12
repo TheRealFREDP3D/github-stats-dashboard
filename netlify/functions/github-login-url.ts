@@ -51,7 +51,24 @@ export const handler: Handler = async (event) => {
       siteUrl = `http://localhost:${vitePort}`;
     }
     
-    siteUrl = siteUrl || process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000';
+    siteUrl = siteUrl || process.env.GITHUB_REDIRECT_URI;
+    
+    // In production, fail hard if no valid site URL is available
+    if (!siteUrl && process.env.NODE_ENV !== 'development') {
+      console.error('No site URL available for OAuth redirect in production');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: "OAuth redirect URL not configured. Please set URL, DEPLOY_PRIME_URL, or GITHUB_REDIRECT_URI environment variables." 
+        }),
+      };
+    }
+    
+    // Only in development, fallback to localhost
+    if (!siteUrl && process.env.NODE_ENV === 'development') {
+      siteUrl = 'http://localhost:3000';
+    }
     
     // Redirect back to the site root with OAuth callback parameters
     const redirectUri = siteUrl;

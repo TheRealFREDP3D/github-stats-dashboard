@@ -41,21 +41,22 @@ if not exist vite-output.txt (
 REM Check which port Vite is using and update .env
 echo 📍 Detecting Vite port...
 for /f "tokens=5 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
+    set VITE_PORT=%%a
     echo 🚨 Vite started on port: %%a
     echo Updating VITE_DEV_PORT in .env...
     powershell -Command "if ((Get-Content .env) -match 'VITE_DEV_PORT=') { (Get-Content .env) -replace 'VITE_DEV_PORT=.*', 'VITE_DEV_PORT=%%a' | Set-Content .env } else { Add-Content .env 'VITE_DEV_PORT=%%a' }"
 )
 
-REM Clean up
-del vite-output.txt
-
 REM Wait a bit more for server to be fully ready
 timeout /t 2 /nobreak >nul
 
-REM Extract port from vite-output and open browser
-for /f "tokens=5 delims=: " %%a in ('type vite-output.txt ^| findstr "Local:"') do (
-    echo 🌐 Opening browser on port: %%a
-    start http://localhost:%%a
+REM Open browser using stored port
+if defined VITE_PORT (
+    echo 🌐 Opening browser on port: %VITE_PORT%
+    start http://localhost:%VITE_PORT%
 )
+
+REM Clean up
+del vite-output.txt
 
 pause
