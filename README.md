@@ -1,6 +1,6 @@
 # QuickHubPulse - GitHub Stats Dashboard
 
-![Header](image/overview.png)
+![Header](image/Overview.png)
 
 ![GitHub License](https://img.shields.io/github/license/TheRealFREDP3D/QuickHubPulse)
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/TheRealFREDP3D/QuickHubPulse)
@@ -19,7 +19,7 @@ A streamlined, modern dashboard for quick repository overview with detailed insi
 
 Simply use the "Log with Github" button to authenticate.
 
-![Enter your PAT](image/authentification-Oauth.png)
+![Enter your PAT](image/authentication-oauth.png)
 
 ### Repository Dashboard
 
