@@ -87,14 +87,37 @@ export const handler: Handler = async (event) => {
       tokenRequestBody.client_secret = clientSecret;
     }
 
-    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(tokenRequestBody),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    let tokenResponse: Response;
+    try {
+      tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tokenRequestBody),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[Token Exchange] Request timeout');
+        return {
+          statusCode: 408,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Token exchange request timeout - please try again' 
+          }),
+        };
+      }
+      
+      throw error;
+    }
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();

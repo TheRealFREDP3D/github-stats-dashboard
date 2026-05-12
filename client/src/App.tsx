@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Github, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { handleOAuthCallback, initiateGitHubLogin } from "./utils/auth-consolidated";
-import { env } from "@/lib/env";
+import { DevAuthPanel } from "@/components/DevAuthPanel";
+import { useDevAuth } from "@/hooks/useDevAuth";
+import { env } from "./lib/env";
 
 function App() {
   const [token, setToken] = useState<string>("");
@@ -15,8 +17,27 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isProcessingCallback, setIsProcessingCallback] = useState<boolean>(false);
 
+  const {
+    devModeActive,
+    devToken,
+    devAuthError,
+    isLoadingDev,
+    setDevToken,
+    authenticateDevToken,
+    resetDevAuth,
+    clearDevAuthError,
+  } = useDevAuth((t, u) => {
+    setToken(t);
+    setUsername(u);
+  });
+
   // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
+    // Skip OAuth callback handling if already authenticated
+    if (devModeActive || token || username) {
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
     const state = urlParams.get('state');
@@ -38,7 +59,8 @@ function App() {
           setIsProcessingCallback(false);
         });
     }
-  }, []);
+  }, [devModeActive, token, username]);
+
 
   const handleGitHubLogin = async () => {
     setIsLoading(true);
@@ -51,10 +73,13 @@ function App() {
     }
   };
 
+
   const handleLogout = () => {
     setToken("");
     setUsername("");
+    resetDevAuth();
   };
+
 
   return (
     <ErrorBoundary>
@@ -76,33 +101,49 @@ function App() {
                   </p>
                 </div>
 
+                <DevAuthPanel
+                  devToken={devToken}
+                  devAuthError={devAuthError}
+                  isLoading={isLoadingDev}
+                  onChangeToken={(v) => {
+                    setDevToken(v);
+                    clearDevAuthError();
+                  }}
+                  onAuthenticate={authenticateDevToken}
+                />
+
                 {isProcessingCallback ? (
                   <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     <p className="text-muted-foreground">Completing authentication...</p>
                   </div>
                 ) : (
-                  <Button
-                    onClick={handleGitHubLogin}
-                    disabled={isLoading}
-                    className="w-full bg-[#24292f] hover:bg-[#24292f]/90 text-white py-6 text-lg font-medium"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Redirecting to GitHub...
-                      </>
-                    ) : (
-                      <>
-                        <Github className="w-5 h-5 mr-2" />
-                        Sign in with GitHub
-                      </>
-                    )}
-                  </Button>
+                  !env.DEVELOPMENT && (
+                    <Button
+                      onClick={handleGitHubLogin}
+                      disabled={isLoading}
+                      className="w-full bg-[#24292f] hover:bg-[#24292f]/90 text-white py-6 text-lg font-medium"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Redirecting to GitHub...
+                        </>
+                      ) : (
+                        <>
+                          <Github className="w-5 h-5 mr-2" />
+                          Sign in with GitHub
+                        </>
+                      )}
+                    </Button>
+                  )
                 )}
 
                 <p className="text-xs text-muted-foreground mt-6">
-                  Secure authentication via GitHub OAuth with PKCE
+                  {env.DEVELOPMENT
+                    ? "Development Mode: Use Personal Access Token authentication above"
+                    : "Secure authentication via GitHub OAuth with PKCE"
+                  }
                 </p>
               </div>
             </div>

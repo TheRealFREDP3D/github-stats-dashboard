@@ -139,14 +139,34 @@ export function useGitHubAPI(
   const fetchResponseWithOptionalAuth = async (
     url: string
   ): Promise<Response> => {
-    const response = await fetch(url, { headers: buildHeaders(token) });
-    if (!response.ok) {
-      // Log warning but don't throw - we'll handle fallbacks
-      console.warn(
-        `GitHub API warning: ${response.status} ${response.statusText} for ${url}`
-      );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    try {
+      const response = await fetch(url, { 
+        headers: buildHeaders(token),
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        // Log warning but don't throw - we'll handle fallbacks
+        console.warn(
+          `GitHub API warning: ${response.status} ${response.statusText} for ${url}`
+        );
+      }
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error(`[GitHub API] Request timeout for ${url}`);
+        throw createGitHubError(ErrorCode.NETWORK_ERROR, 408);
+      }
+      
+      throw error;
     }
-    return response;
   };
 
   const fetchCountWithFallback = async (url: string): Promise<number> => {

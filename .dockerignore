@@ -24,3 +24,18 @@ README.md
 PULL_REQUEST.md
 SETUP_GUIDE.md
 ideas.md
+
+# Development artifacts
+vite-output.txt
+detect-vite-port.js
+update-dev-port.js
+DEVELOPMENT_AUTH.md
+
+# Netlify build artifacts
+.netlify/functions-serve/
+netlify/.env
+
+# Additional development files
+codeviz/
+codeboarding/
+.windsurf/

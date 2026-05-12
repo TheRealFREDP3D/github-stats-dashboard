@@ -1,6 +1,6 @@
 # QuickHubPulse - GitHub Stats Dashboard
 
-![Header](image/header.jpg)
+![Header](image/Overview.png)
 
 ![GitHub License](https://img.shields.io/github/license/TheRealFREDP3D/QuickHubPulse)
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/TheRealFREDP3D/QuickHubPulse)
@@ -15,23 +15,23 @@ A streamlined, modern dashboard for quick repository overview with detailed insi
 
 ## Screenshots
 
-### Easy Authentication
+### Authentication
 
-Enter your GitHub Personal Access Token to get started:
+Simply use the "Log with Github" button to authenticate.
 
-![Authentication](image/authentication-oauth.png)
+![Enter your PAT](image/authentication-oauth.png)
 
 ### Repository Dashboard
 
 View all your repositories in a responsive grid layout with key metrics:
 
-![Dashboard - Dark Theme](image/dashboard_github_dark.png)
+![Repositories Grid](image/dashboard_github_dark.png)
 
 ### Detailed Statistics
 
 Click any repository card to see comprehensive statistics and traffic trends:
 
-![Detailed View](image/detailed_view.png)
+![Detailed Statistics](image/detailed_view.png)
 
 ## Features
 
@@ -75,7 +75,7 @@ Click any repository card to open a detailed modal with:
 
 - Node.js 18+
 - pnpm (recommended) or npm
-- GitHub Personal Access Token
+- GitHub Personal Access Token (Optional - for local development)
 
 ### Creating a GitHub Personal Access Token
 
@@ -107,14 +107,14 @@ The application will be available at `http://localhost:3000` (or another port if
 
 1. Open the dashboard in your browser
 2. Paste your GitHub Personal Access Token in the input field
-3. Click "Load Repositories"
+3. Click "Key icon" to authenticate
 4. Browse your repositories in the grid
 5. Click any card to view detailed statistics and traffic trends
 6. Use the search bar to filter repositories by name or description
 
 ## Project Structure
 
-```
+```text
 client/
   public/           ← Static assets
   src/
@@ -124,12 +124,21 @@ client/
     contexts/       ← React contexts (ThemeContext)
     lib/            ← Utility functions
     utils/          ← Utility functions (OAuth, error handling)
+    services/       ← API services
+    docs/           ← Documentation
     App.tsx         ← Main app component
     main.tsx        ← React entry point
     index.css       ← Global styles and theme
+    const.ts        ← Shared constants
+    errors.ts       ← Error handling
 server/
   index.ts         ← Express.js backend for stats persistence and OAuth
-data/              ← Local storage for statistics (created automatically)
+shared/
+  const.ts         ← Shared constants between client and server
+netlify/
+  functions/       ← Netlify serverless functions
+image/             ← Screenshots and images
+dist/              ← Build output (created automatically)
 ```
 
 ## Key Components
@@ -202,7 +211,30 @@ The dashboard supports three authentication methods:
 - Limited to public repository information only
 - Traffic data and private stats are not available
 
-### 3. GitHub OAuth (Development Setup Required)
+### 3. Environment Variable (Development)
+
+- Set your GitHub Personal Access Token in a `.env` file for automatic authentication
+- No need to manually enter token each time you start the app
+- Token is loaded automatically from environment variables
+- Ideal for local development convenience
+
+To set up .env authentication:
+
+1. Copy `.env.example` to `.env`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and add your token:
+
+   ```env
+   VITE_GITHUB_PERSONAL_TOKEN=your_personal_access_token_here
+   ```
+
+3. Restart the development server - the app will authenticate automatically
+
+### 4. GitHub OAuth (Development Setup Required)
 
 - Click "Login with GitHub" to authenticate via OAuth
 - Requires backend configuration with GitHub OAuth App
@@ -210,15 +242,7 @@ The dashboard supports three authentication methods:
   - `GITHUB_CLIENT_ID`: Your GitHub OAuth App client ID
   - `GITHUB_REDIRECT_URI`: OAuth callback URL (required for each environment)
 
-To set up OAuth:
-
-1. Create a GitHub OAuth App at [GitHub Settings → Developer settings → OAuth Apps](https://github.com/settings/applications/new)
-2. Set the callback URL appropriate for your environment:
-   - **Development**: `http://localhost:8888/auth/github/callback`
-   - **Staging**: `https://your-staging-url.netlify.app/auth/github/callback`
-   - **Production**: `https://quickhubpulse.netlify.app/auth/github/callback`
-3. Copy the Client ID and set the `GITHUB_REDIRECT_URI` environment variable to match your callback URL
-4. The OAuth flow will redirect back to the app after authentication
+### OAuth Setup Instructions
 
 **Important**: `GITHUB_REDIRECT_URI` is now required and must be set for each environment. It cannot use a default value to prevent misconfiguration between environments.
 
@@ -226,7 +250,7 @@ To set up OAuth:
 
 The application includes a lightweight Express.js backend for local statistics persistence:
 
-### Features
+### Backend Features
 
 - Save repository statistics locally with timestamps
 - Retrieve historical statistics
@@ -239,7 +263,7 @@ The application includes a lightweight Express.js backend for local statistics p
 - `GET /api/stats` - Get all historical statistics
 - `GET /api/stats/latest` - Get the most recent statistics
 
-### Usage
+### Backend Usage
 
 The backend is automatically started when running `pnpm run dev`. Statistics can be saved manually using the "Save Stats" button in the dashboard, which stores the current repository data locally for future reference.
 
