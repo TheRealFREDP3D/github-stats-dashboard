@@ -1,8 +1,8 @@
 import express from "express";
-import { createServer } from "http";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
+import { createServer } from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import fs from "node:fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,15 +22,20 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Helper to get the correct redirect URI
+  const getRedirectUri = () => {
+    if (process.env.GITHUB_REDIRECT_URI) {
+      return process.env.GITHUB_REDIRECT_URI;
+    }
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    // Append /auth/github/callback for the legacy flow handled by this server
+    return `${baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl}/auth/github/callback`;
+  };
+
   // OAuth endpoints
-  app.post("/api/auth/github/login-url", (req, res) => {
+  // Support both GET (legacy/simple) and POST (modern PKCE)
+  app.all("/api/auth/github/login-url", (req, res) => {
     try {
-      const { code_challenge, state } = req.body;
-
-      if (!code_challenge || !state) {
-        return res.status(400).json({ error: "Missing code_challenge or state" });
-      }
-
       const clientId = process.env.GITHUB_CLIENT_ID;
       if (!clientId) {
         return res.status(500).json({ 
@@ -38,16 +43,34 @@ async function startServer() {
         });
       }
 
-      const redirectUri = process.env.GITHUB_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}`;
+      // Defensive check for production environment
+      if (!process.env.GITHUB_REDIRECT_URI && !process.env.BASE_URL && process.env.NODE_ENV === 'production') {
+        return res.status(500).json({
+          error: "OAuth redirect URL not configured. Please set GITHUB_REDIRECT_URI or BASE_URL environment variables."
+        });
+      }
+
+      const redirectUri = getRedirectUri();
       
       const authParams = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
         scope: 'repo,user',
-        state: state,
-        code_challenge: code_challenge,
-        code_challenge_method: 'S256',
       });
+
+      // Handle PKCE parameters if provided via POST
+      if (req.method === 'POST') {
+        const { code_challenge, state } = req.body;
+        if (code_challenge) {
+          authParams.append('code_challenge', code_challenge);
+          authParams.append('code_challenge_method', 'S256');
+        }
+        if (state) authParams.append('state', state);
+      } else {
+        // Simple state for GET requests if not provided
+        const state = req.query.state as string || Math.random().toString(36).substring(2, 15);
+        authParams.append('state', state);
+      }
 
       const authUrl = `https://github.com/login/oauth/authorize?${authParams.toString()}`;
       
@@ -55,6 +78,20 @@ async function startServer() {
     } catch (error) {
       console.error("Error generating OAuth URL:", error);
       res.status(500).json({ error: "Failed to generate OAuth URL" });
+    }
+  });
+
+  // Legacy OAuth callback handler - redirects to root
+  app.get("/auth/github/callback", (req, res) => {
+    try {
+      const { code, state } = req.query;
+      if (!code) {
+        return res.status(400).send("Authorization code not provided");
+      }
+      res.redirect(`/?oauth=success&code=${code}&state=${state}`);
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      res.redirect(`/?oauth=error`);
     }
   });
 
@@ -71,17 +108,20 @@ async function startServer() {
 
       const clientId = process.env.GITHUB_CLIENT_ID;
       const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-      
+
       if (!clientId) {
         return res.status(500).json({
           error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID environment variable."
         });
       }
 
+      const redirectUri = getRedirectUri();
+
       const tokenRequestBody: Record<string, string> = {
         client_id: clientId,
         code: code,
         code_verifier: code_verifier,
+        redirect_uri: redirectUri,
       };
 
       if (clientSecret) {
