@@ -23,13 +23,14 @@ async function startServer() {
   app.use(express.json());
 
   // OAuth endpoints
-  app.get("/api/auth/github/login-url", (_req, res) => {
+  app.post("/api/auth/github/login-url", (req, res) => {
     try {
-      // Note: In a production environment, you would:
-      // 1. Store your GitHub OAuth client ID and secret in environment variables
-      // 2. Generate a random state parameter for security
-      // 3. Include the proper redirect URI
-      
+      const { code_challenge, state } = req.body;
+
+      if (!code_challenge || !state) {
+        return res.status(400).json({ error: "Missing code_challenge or state" });
+      }
+
       const clientId = process.env.GITHUB_CLIENT_ID;
       if (!clientId) {
         return res.status(500).json({ 
@@ -37,17 +38,18 @@ async function startServer() {
         });
       }
 
-      // In production, fail hard if no valid redirect URI is available
-      if (!process.env.GITHUB_REDIRECT_URI && !process.env.BASE_URL && process.env.NODE_ENV === 'production') {
-        return res.status(500).json({ 
-          error: "OAuth redirect URL not configured. Please set GITHUB_REDIRECT_URI or BASE_URL environment variables." 
-        });
-      }
+      const redirectUri = process.env.GITHUB_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}`;
       
-      const redirectUri = process.env.GITHUB_REDIRECT_URI || `${process.env.BASE_URL || 'http://localhost:3000'}/auth/github/callback`;
-      const state = Math.random().toString(36).substring(2, 15); // Simple state for demo
-      
-      const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo,user&state=${state}`;
+      const authParams = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: 'repo,user',
+        state: state,
+        code_challenge: code_challenge,
+        code_challenge_method: 'S256',
+      });
+
+      const authUrl = `https://github.com/login/oauth/authorize?${authParams.toString()}`;
       
       res.json({ url: authUrl });
     } catch (error) {
@@ -56,25 +58,66 @@ async function startServer() {
     }
   });
 
-  // OAuth callback handler
-  app.get("/auth/github/callback", (req, res) => {
+  // Token exchange endpoint for PKCE
+  app.post("/api/auth/exchange-token", async (req, res) => {
     try {
-      const { code, state } = req.query;
-      
-      if (!code) {
-        return res.status(400).send("Authorization code not provided");
+      const { code, code_verifier } = req.body;
+
+      if (!code || !code_verifier) {
+        return res.status(400).json({
+          error: 'Missing required parameters: code and code_verifier are required'
+        });
       }
 
-      // In a production environment, you would:
-      // 1. Exchange the code for an access token using GitHub's API
-      // 2. Store the token securely
-      // 3. Redirect back to the frontend with the token or session
+      const clientId = process.env.GITHUB_CLIENT_ID;
+      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
       
-      // For now, redirect to the frontend with a message
-      res.redirect(`/?oauth=success&code=${code}&state=${state}`);
+      if (!clientId) {
+        return res.status(500).json({
+          error: "GitHub OAuth not configured. Please set GITHUB_CLIENT_ID environment variable."
+        });
+      }
+
+      const tokenRequestBody: Record<string, string> = {
+        client_id: clientId,
+        code: code,
+        code_verifier: code_verifier,
+      };
+
+      if (clientSecret) {
+        tokenRequestBody.client_secret = clientSecret;
+      }
+
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tokenRequestBody),
+      });
+
+      if (!tokenResponse.ok) {
+        return res.status(400).json({ error: 'Token exchange failed' });
+      }
+
+      const tokenData = await tokenResponse.json() as any;
+
+      if (tokenData.error) {
+        return res.status(400).json({
+          error: tokenData.error_description || tokenData.error
+        });
+      }
+
+      res.json({
+        success: true,
+        access_token: tokenData.access_token,
+        token_type: tokenData.token_type || 'bearer',
+        scope: tokenData.scope,
+      });
     } catch (error) {
-      console.error("OAuth callback error:", error);
-      res.redirect(`/?oauth=error`);
+      console.error('Token exchange error:', error);
+      res.status(500).json({ error: 'Internal server error during token exchange' });
     }
   });
 
