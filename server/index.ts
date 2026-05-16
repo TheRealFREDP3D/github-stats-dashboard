@@ -10,6 +10,14 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, "..", "data");
 const STATS_FILE = path.resolve(DATA_DIR, "repository-stats.json");
 
+interface GitHubTokenResponse {
+  access_token?: string;
+  token_type?: string;
+  scope?: string;
+  error?: string;
+  error_description?: string;
+}
+
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -142,7 +150,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Token exchange failed' });
       }
 
-      const tokenData = await tokenResponse.json() as any;
+      const tokenData = await tokenResponse.json() as GitHubTokenResponse;
 
       if (tokenData.error) {
         return res.status(400).json({
