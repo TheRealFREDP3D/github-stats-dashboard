@@ -121,15 +121,13 @@ async function startServer() {
         client_id: clientId,
         code: code,
         code_verifier: code_verifier,
+        grant_type: "authorization_code",
         redirect_uri: redirectUri,
       };
 
       if (clientSecret) {
         tokenRequestBody.client_secret = clientSecret;
       }
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
@@ -138,13 +136,9 @@ async function startServer() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(tokenRequestBody),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
-        console.error('GitHub token exchange failed:', tokenResponse.status, errorText);
         return res.status(400).json({ error: 'Token exchange failed' });
       }
 
