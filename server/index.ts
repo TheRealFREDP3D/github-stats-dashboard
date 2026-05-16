@@ -143,6 +143,8 @@ async function startServer() {
       clearTimeout(timeoutId);
 
       if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('GitHub token exchange failed:', tokenResponse.status, errorText);
         return res.status(400).json({ error: 'Token exchange failed' });
       }
 
