@@ -128,6 +128,9 @@ async function startServer() {
         tokenRequestBody.client_secret = clientSecret;
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
@@ -135,7 +138,9 @@ async function startServer() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(tokenRequestBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!tokenResponse.ok) {
         return res.status(400).json({ error: 'Token exchange failed' });
