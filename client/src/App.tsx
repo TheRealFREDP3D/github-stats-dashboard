@@ -33,6 +33,14 @@ function App() {
 
   // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
+    // Restore authentication state from sessionStorage on mount
+    const storedToken = sessionStorage.getItem('quickhubpulse_token');
+    const storedUsername = sessionStorage.getItem('quickhubpulse_username');
+    if (storedToken && storedUsername && !devModeActive) {
+      setToken(storedToken);
+      setUsername(storedUsername);
+    }
+
     // Skip OAuth callback handling if already authenticated
     if (devModeActive || token || username) {
       return;
@@ -48,6 +56,9 @@ function App() {
         .then(({ token, username }) => {
           setToken(token);
           setUsername(username);
+          // Persist authentication state
+          sessionStorage.setItem('quickhubpulse_token', token);
+          sessionStorage.setItem('quickhubpulse_username', username);
           toast.success('Successfully authenticated with GitHub!');
           window.history.replaceState({}, document.title, window.location.pathname);
         })
@@ -77,6 +88,9 @@ function App() {
   const handleLogout = () => {
     setToken("");
     setUsername("");
+    // Clear persisted authentication state
+    sessionStorage.removeItem('quickhubpulse_token');
+    sessionStorage.removeItem('quickhubpulse_username');
     resetDevAuth();
   };
 
