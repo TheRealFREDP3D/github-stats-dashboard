@@ -8,15 +8,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RepositoryCard } from "@/components/RepositoryCard";
-import { RepositoryDetail } from "@/components/RepositoryDetail";
+const RepositoryDetail = lazy(() =>
+  import("@/components/RepositoryDetail").then(module => ({
+    default: module.RepositoryDetail,
+  }))
+);
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { useGitHubAPI, Repository } from "@/hooks/useGitHubAPI";
 import { ErrorCode } from "@/errors";
 import { useLocalStats } from "@/hooks/useLocalStats";
-import { Github, LogOut, Search, Keyboard, Save } from "lucide-react";
+import { Github, LogOut, Search, Keyboard, Save, Loader2 } from "lucide-react";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { AnimatePresence } from "framer-motion";
-import { useState, useMemo, useEffect } from "react";
+import React, { lazy, Suspense, useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 
 type SortOption = "stars" | "forks" | "recent" | "views";
@@ -32,8 +36,14 @@ export default function Dashboard({
   username,
   onLogout,
 }: DashboardProps) {
-  const { repositories, loading, error, errorCode, refetch, fetchDetailedStats } =
-    useGitHubAPI(token, username);
+  const {
+    repositories,
+    loading,
+    error,
+    errorCode,
+    refetch,
+    fetchDetailedStats,
+  } = useGitHubAPI(token, username);
   const { saveStats } = useLocalStats();
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -270,7 +280,8 @@ export default function Dashboard({
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
             <p className="font-semibold mb-2">Error loading repositories</p>
             <div className="text-sm whitespace-pre-line">{error}</div>
-            {(errorCode === ErrorCode.API_FORBIDDEN || errorCode === ErrorCode.API_RATE_LIMIT) && (
+            {(errorCode === ErrorCode.API_FORBIDDEN ||
+              errorCode === ErrorCode.API_RATE_LIMIT) && (
               <div className="mt-3 p-3 bg-red-100 rounded-md">
                 <p className="text-xs font-medium mb-1">Quick fixes:</p>
                 <ul className="text-xs space-y-1 list-disc list-inside">
@@ -326,12 +337,20 @@ export default function Dashboard({
       {/* Repository Detail Modal */}
       <AnimatePresence>
         {selectedRepo && (
-          <RepositoryDetail
-            repo={selectedRepo}
-            onClose={() => setSelectedRepo(null)}
-            layoutId={`repo-${selectedRepo.id}`}
-            fetchDetailedStats={fetchDetailedStats}
-          />
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              </div>
+            }
+          >
+            <RepositoryDetail
+              repo={selectedRepo}
+              onClose={() => setSelectedRepo(null)}
+              layoutId={`repo-${selectedRepo.id}`}
+              fetchDetailedStats={fetchDetailedStats}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>

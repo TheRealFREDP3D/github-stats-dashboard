@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Dashboard from "./pages/Dashboard";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Github, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { handleOAuthCallback, initiateGitHubLogin } from "./utils/auth-consolidated";
+import {
+  handleOAuthCallback,
+  initiateGitHubLogin,
+} from "./utils/auth-consolidated";
 import { DevAuthPanel } from "@/components/DevAuthPanel";
 import { useDevAuth } from "@/hooks/useDevAuth";
 import { env } from "./lib/env";
@@ -15,7 +18,8 @@ function App() {
   const [token, setToken] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isProcessingCallback, setIsProcessingCallback] = useState<boolean>(false);
+  const [isProcessingCallback, setIsProcessingCallback] =
+    useState<boolean>(false);
 
   const {
     devModeActive,
@@ -34,8 +38,8 @@ function App() {
   // Handle PKCE OAuth callback from GitHub
   useEffect(() => {
     // Restore authentication state from sessionStorage on mount
-    const storedToken = sessionStorage.getItem('quickhubpulse_token');
-    const storedUsername = sessionStorage.getItem('quickhubpulse_username');
+    const storedToken = sessionStorage.getItem("quickhubpulse_token");
+    const storedUsername = sessionStorage.getItem("quickhubpulse_username");
     if (storedToken && storedUsername && !devModeActive) {
       setToken(storedToken);
       setUsername(storedUsername);
@@ -47,8 +51,8 @@ function App() {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
+    const code = urlParams.get("code");
+    const state = urlParams.get("state");
 
     if (code && state) {
       setIsProcessingCallback(true);
@@ -57,13 +61,17 @@ function App() {
           setToken(token);
           setUsername(username);
           // Persist authentication state
-          sessionStorage.setItem('quickhubpulse_token', token);
-          sessionStorage.setItem('quickhubpulse_username', username);
-          toast.success('Successfully authenticated with GitHub!');
-          window.history.replaceState({}, document.title, window.location.pathname);
+          sessionStorage.setItem("quickhubpulse_token", token);
+          sessionStorage.setItem("quickhubpulse_username", username);
+          toast.success("Successfully authenticated with GitHub!");
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
         })
         .catch(error => {
-          console.error('[OAuth] OAuth callback error:', error);
+          console.error("[OAuth] OAuth callback error:", error);
           toast.error(`GitHub authentication failed: ${error.message}`);
         })
         .finally(() => {
@@ -72,28 +80,29 @@ function App() {
     }
   }, [devModeActive, token, username]);
 
-
   const handleGitHubLogin = async () => {
     setIsLoading(true);
     try {
       await initiateGitHubLogin();
     } catch (error) {
-      console.error('[OAuth] Login error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to initiate GitHub login');
+      console.error("[OAuth] Login error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to initiate GitHub login"
+      );
       setIsLoading(false);
     }
   };
-
 
   const handleLogout = () => {
     setToken("");
     setUsername("");
     // Clear persisted authentication state
-    sessionStorage.removeItem('quickhubpulse_token');
-    sessionStorage.removeItem('quickhubpulse_username');
+    sessionStorage.removeItem("quickhubpulse_token");
+    sessionStorage.removeItem("quickhubpulse_username");
     resetDevAuth();
   };
-
 
   return (
     <ErrorBoundary>
@@ -119,7 +128,7 @@ function App() {
                   devToken={devToken}
                   devAuthError={devAuthError}
                   isLoading={isLoadingDev}
-                  onChangeToken={(v) => {
+                  onChangeToken={v => {
                     setDevToken(v);
                     clearDevAuthError();
                   }}
@@ -129,7 +138,9 @@ function App() {
                 {isProcessingCallback ? (
                   <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Completing authentication...</p>
+                    <p className="text-muted-foreground">
+                      Completing authentication...
+                    </p>
                   </div>
                 ) : (
                   !env.DEVELOPMENT && (
@@ -156,17 +167,24 @@ function App() {
                 <p className="text-xs text-muted-foreground mt-6">
                   {env.DEVELOPMENT
                     ? "Development Mode: Use Personal Access Token authentication above"
-                    : "Secure authentication via GitHub OAuth with PKCE"
-                  }
+                    : "Secure authentication via GitHub OAuth with PKCE"}
                 </p>
               </div>
             </div>
           ) : (
-            <Dashboard
-              token={token}
-              username={username}
-              onLogout={handleLogout}
-            />
+            <Suspense
+              fallback={
+                <div className="min-h-screen bg-background flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              }
+            >
+              <Dashboard
+                token={token}
+                username={username}
+                onLogout={handleLogout}
+              />
+            </Suspense>
           )}
         </TooltipProvider>
       </ThemeProvider>
@@ -194,7 +212,7 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    console.error("Error caught by ErrorBoundary:", error, errorInfo);
     this.setState({ error, errorInfo });
   }
 
@@ -216,7 +234,7 @@ class ErrorBoundary extends React.Component<
             <p className="text-muted-foreground mb-6">
               An unexpected error occurred while loading the application.
             </p>
-            
+
             <div className="space-y-3">
               <Button
                 onClick={this.handleReset}
@@ -225,7 +243,7 @@ class ErrorBoundary extends React.Component<
                 <RefreshCw className="w-4 h-4" />
                 Try Again
               </Button>
-              
+
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"

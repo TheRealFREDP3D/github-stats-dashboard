@@ -1,9 +1,9 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { defineConfig } from "vitest/config";
+import type { Plugin, ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -153,7 +153,6 @@ function vitePluginManusDebugCollector(): Plugin {
 const plugins = [
   react(),
   tailwindcss(),
-  jsxLocPlugin(),
   vitePluginManusRuntime(),
   vitePluginManusDebugCollector(),
 ];
@@ -162,7 +161,9 @@ export default defineConfig({
   plugins,
   define: {
     // Ensure development-only code is properly stripped from production
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    "process.env.NODE_ENV": JSON.stringify(
+      process.env.NODE_ENV || "production"
+    ),
   },
   resolve: {
     alias: {
@@ -173,6 +174,10 @@ export default defineConfig({
   },
   envDir: path.resolve(import.meta.dirname),
   root: path.resolve(import.meta.dirname, "client"),
+  test: {
+    environment: "jsdom",
+    setupFiles: path.resolve(import.meta.dirname, "client/src/test/setup.ts"),
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
@@ -195,17 +200,25 @@ export default defineConfig({
       deny: ["**/.*"],
     },
     proxy: {
-      '/api/auth/github/login-url': {
-        target: 'http://localhost:8991',
+      "/api/auth/github/login-url": {
+        target: "http://localhost:8991",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace('/api/auth/github/login-url', '/.netlify/functions/github-login-url'),
+        rewrite: path =>
+          path.replace(
+            "/api/auth/github/login-url",
+            "/.netlify/functions/github-login-url"
+          ),
       },
-      '/api/auth/exchange-token': {
-        target: 'http://localhost:8991',
+      "/api/auth/exchange-token": {
+        target: "http://localhost:8991",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace('/api/auth/exchange-token', '/.netlify/functions/exchange-token'),
+        rewrite: path =>
+          path.replace(
+            "/api/auth/exchange-token",
+            "/.netlify/functions/exchange-token"
+          ),
       },
     },
   },
